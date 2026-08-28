@@ -1,7 +1,7 @@
 [book]
-title = "Rust Toolbox"
+title = "Data Structures in Rust"
 authors = ["Bijan"]
-description = "Independent, practical field notes on useful Rust types and APIs."
+description = "An interactive guide to data structures in Rust from first principles."
 language = "en"
 src = "book-src"
 
@@ -16,9 +16,9 @@ default-theme = "light"
 preferred-dark-theme = "navy"
 additional-css = ["theme/toolbox.css", "theme/vecdeque-ring-buffer.css", "theme/structure-demos.css"]
 additional-js = ["theme/vecdeque-ring-buffer.js", "theme/structure-demos.js"]
-git-repository-url = "https://github.com/beejmaxx/rust-toolbox"
-edit-url-template = "https://github.com/beejmaxx/rust-toolbox/edit/main/{path}"
-site-url = "/rust-toolbox/"
+git-repository-url = "https://github.com/beejmaxx/data-structures-in-rust"
+edit-url-template = "https://github.com/beejmaxx/data-structures-in-rust/edit/main/{path}"
+site-url = "/data-structures-in-rust/"
 
 [output.html.search]
 enable = true

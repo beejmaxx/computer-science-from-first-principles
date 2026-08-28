@@ -1,20 +1,23 @@
-# Rust Toolbox
+# Data Structures in Rust
 
-<p class="chapter-subtitle">Practical field notes for the Rust tool you need right now.</p>
+<p class="chapter-subtitle">An interactive guide from first principles.</p>
 
-Some Rust books are journeys. This one is a workbench.
+Data structures are choices about what must be fast, what may be slower, and
+how values should be arranged in memory.
 
-Each chapter starts with a concrete problem and introduces one useful type or
-API. It assumes you can read basic Rust, but it does not make you revisit the
-language from the beginning. Chapters stand alone and can be read in any order.
+Each chapter introduces one structure through a concrete problem, an
+interactive model, and runnable Rust. It assumes you can read basic Rust, but
+it does not make you revisit the language from the beginning. Chapters stand
+alone and can be read in any order.
 
 Every field note answers the same questions:
 
-- What problem does this tool solve?
+- What problem does this structure solve?
 - What is the smallest complete example?
 - What mental model predicts its behavior?
 - Which details matter in real programs?
 - When should you choose something else?
 
 Start with [`VecDeque`](vecdeque.md) when work must enter and leave a collection
-in order, or browse the [roadmap](roadmap.md) for the tools coming next.
+in order, or browse the [selection guide](selection-guide.md) when you need to
+choose among several structures.

@@ -1,34 +1,34 @@
 # Roadmap
 
-Rust Toolbox grows one independent field note at a time. This is a pool of
-useful next topics, not a required reading order.
+Data Structures in Rust grows one independent chapter at a time. This is a pool
+of useful next topics, not a required reading order.
 
 The foundational data-structure curriculum is now represented in the book.
 
-## Collections
+## Specialized contiguous storage
 
 - `SmallVec` and `ArrayVec`: when inline capacity is worth the tradeoff
+- Sparse sets: dense iteration with fast integer-key membership
+- Gap buffers and ropes: editing text without repeatedly moving everything
 
-## Values and initialization
+## Range and order structures
 
-- `Cow`: borrow until mutation is necessary
-- `OnceLock` and `LazyLock`: initialize shared values once
-- `NonZero<T>`: give zero a meaning the type system can see
-- `mem::take` and `mem::replace`: move values through borrowed structures
+- Fenwick trees: prefix aggregates with compact storage
+- Segment trees: mutable range queries
+- Skip lists: probabilistic ordered search
+- Radix trees: compact prefix lookup
 
-## Time, paths, and text
+## Graph and search structures
 
-- `Duration` and `Instant`: measure time without wall-clock mistakes
-- `Path` and `PathBuf`: filesystem paths are not strings
-- `OsStr` and `OsString`: preserve operating-system text
-- `CString` and `CStr`: cross a C boundary deliberately
+- Adjacency matrices: dense graphs and constant-time edge checks
+- Compressed sparse row storage: compact static graphs
+- Spatial indexes: k-d trees, quadtrees, and R-trees
 
-## Coordination
+## Market-oriented structures
 
-- `mpsc` channels: ownership transfer between threads
-- `Barrier`: advance a group in phases
-- `Condvar`: sleep until shared state changes
-- atomics: counters, flags, and memory-ordering boundaries
+- Order-book price levels: ordered prices with FIFO queues
+- Timing wheels: large numbers of scheduled expirations
+- Lock-free ring buffers: bounded producer-consumer streams
 
 ## Chapter rule
 
