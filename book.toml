@@ -1,7 +1,7 @@
 [book]
-title = "Data Structures in Rust"
+title = "Computer Science from First Principles"
 authors = ["Bijan"]
-description = "An interactive guide to data structures in Rust from first principles."
+description = "Interactive foundations for high-performance, low-latency systems, with practical Rust implementations."
 language = "en"
 src = "book-src"
 
@@ -14,11 +14,11 @@ edition = "2024"
 [output.html]
 default-theme = "light"
 preferred-dark-theme = "navy"
-additional-css = ["theme/toolbox.css", "theme/vecdeque-ring-buffer.css", "theme/structure-demos.css"]
-additional-js = ["theme/vecdeque-ring-buffer.js", "theme/structure-demos.js"]
-git-repository-url = "https://github.com/beejmaxx/data-structures-in-rust"
-edit-url-template = "https://github.com/beejmaxx/data-structures-in-rust/edit/main/{path}"
-site-url = "/data-structures-in-rust/"
+additional-css = ["theme/toolbox.css", "theme/vecdeque-ring-buffer.css", "theme/structure-demos.css", "theme/algorithm-demos.css"]
+additional-js = ["theme/vecdeque-ring-buffer.js", "theme/structure-demos.js", "theme/algorithm-demos.js"]
+git-repository-url = "https://github.com/beejmaxx/computer-science-from-first-principles"
+edit-url-template = "https://github.com/beejmaxx/computer-science-from-first-principles/edit/main/{path}"
+site-url = "/computer-science-from-first-principles/"
 
 [output.html.search]
 enable = true

@@ -1,14 +1,17 @@
-# Data Structures in Rust
+# Computer Science from First Principles
 
-An interactive guide to data structures from first principles.
+Interactive foundations for high-performance, low-latency systems, with
+practical Rust implementations.
 
-**Status:** Version 1.0
+**Status:** In development. The data-structures part reached version 1.0.
 
-The book assumes you can read ordinary Rust. It focuses on how each structure
-works, when to use it, where it surprises people, and what to choose instead
-when it is the wrong fit. Chapters stand alone and can be read in any order.
+The book builds from data structures and algorithms into the machine, operating
+system, concurrency, networking, performance, storage, and market-system ideas
+needed to reason about low-latency software. Chapters emphasize interactive
+models, predictive invariants, honest costs, and straightforward Rust.
 
-Read it online at **https://beejmaxx.github.io/data-structures-in-rust/**.
+Read it online at
+**https://beejmaxx.github.io/computer-science-from-first-principles/**.
 
 ## Read locally
 
@@ -28,11 +31,13 @@ mdbook build
 ## Structure
 
 - `book-src/SUMMARY.md` controls the sidebar.
-- Each data structure gets a self-contained chapter under `book-src/`.
-- `book-src/roadmap.md` holds candidate topics without imposing a curriculum.
+- Chapters remain self-contained and are grouped into progressively deeper
+  parts.
+- `book-src/roadmap.md` records the full curriculum and its low-latency purpose.
 
-Start with [`VecDeque`](book-src/vecdeque.md), or choose a structure directly
-from the book's sidebar.
+Start with [`VecDeque`](book-src/vecdeque.md), begin the algorithms part with
+[`Binary Search`](book-src/algorithms/binary-search.md), or choose a topic from
+the [curriculum](book-src/roadmap.md).
 
 ## Contributing
 
@@ -41,4 +46,5 @@ welcome through issues and pull requests.
 
 ## License
 
-Data Structures in Rust is available under the [MIT License](LICENSE).
+Computer Science from First Principles is available under the
+[MIT License](LICENSE).

@@ -1,25 +1,27 @@
-# Data Structures in Rust
+# Computer Science from First Principles
 
-<p class="chapter-subtitle">An interactive guide from first principles.</p>
+<p class="chapter-subtitle">Interactive foundations for high-performance, low-latency systems.</p>
 
-<p class="chapter-meta"><span><strong>Version</strong> 1.0</span><span><strong>Status</strong> Foundational guide complete</span></p>
+<p class="chapter-meta"><span><strong>Data structures</strong> Version 1.0</span><span><strong>Current part</strong> Algorithms</span></p>
 
-Data structures are choices about what must be fast, what may be slower, and
-how values should be arranged in memory.
+Low latency is not one trick. It emerges from choices made across algorithms,
+memory layout, scheduling, synchronization, networking, measurement, and the
+application itself.
 
-Each chapter introduces one structure through a concrete problem, an
-interactive model, and runnable Rust. It assumes you can read basic Rust, but
-it does not make you revisit the language from the beginning. Chapters stand
-alone and can be read in any order.
+This book builds those ideas from the ground up. Each chapter begins with a
+concrete problem and an interactive model, establishes a language-independent
+invariant, and then uses straightforward Rust to make the costs explicit. It
+assumes you can read basic Rust without making Rust syntax the subject.
 
 Every field note answers the same questions:
 
-- What problem does this structure solve?
+- What problem does this idea solve?
 - What is the smallest complete example?
 - What mental model predicts its behavior?
-- Which details matter in real programs?
+- Which costs become visible on real machines?
 - When should you choose something else?
 
 Start with [`VecDeque`](vecdeque.md) when work must enter and leave a collection
-in order, or browse the [selection guide](selection-guide.md) when you need to
-choose among several structures.
+in order, continue to [binary search](algorithms/binary-search.md) to see how an
+invariant becomes an algorithm, or browse the [curriculum](roadmap.md) to see
+the path toward complete low-latency systems.

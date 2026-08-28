@@ -1,0 +1,144 @@
+.algorithm-demo {
+  --algorithm-border: var(--table-border-color);
+  --algorithm-surface: var(--quote-bg);
+  --algorithm-active: color-mix(in srgb, var(--links) 20%, var(--bg));
+  margin: 1.5rem 0 2.25rem;
+  padding: 1rem;
+  border: 1px solid var(--algorithm-border);
+  border-radius: 12px;
+  background: var(--algorithm-surface);
+}
+
+.algorithm-demo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.algorithm-demo-field {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--icons);
+  font-size: 0.88em;
+}
+
+.algorithm-demo select,
+.algorithm-demo button {
+  min-height: 40px;
+  padding: 0.48rem 0.75rem;
+  border: 1px solid var(--algorithm-border);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+  font: inherit;
+}
+
+.algorithm-demo button:hover:not(:disabled) {
+  background: var(--table-header-bg);
+}
+
+.algorithm-demo button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.binary-search-stage {
+  padding: 1.4rem 0 0.7rem;
+}
+
+.binary-search-array {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(2.25rem, 1fr));
+  gap: 0.4rem;
+}
+
+.binary-search-cell {
+  position: relative;
+  display: grid;
+  min-height: 64px;
+  place-items: center;
+  border: 1px solid var(--algorithm-border);
+  border-radius: 7px;
+  background: var(--bg);
+  font-family: var(--mono-font);
+  font-variant-numeric: tabular-nums;
+  transition: opacity 180ms ease, transform 180ms ease, background-color 180ms ease;
+}
+
+.binary-search-cell.is-outside {
+  opacity: 0.28;
+}
+
+.binary-search-cell.is-next {
+  transform: translateY(-4px);
+  border-color: var(--links);
+  background: var(--algorithm-active);
+}
+
+.binary-search-cell.is-result {
+  border-color: var(--links);
+  background: var(--algorithm-active);
+  font-weight: 700;
+}
+
+.binary-search-index {
+  position: absolute;
+  inset-block-end: 0.24rem;
+  color: var(--icons);
+  font-size: 0.7em;
+}
+
+.binary-search-marker {
+  position: absolute;
+  inset-block-start: -1.2rem;
+  color: var(--links);
+  font-family: var(--mono-font);
+  font-size: 0.72em;
+  font-weight: 700;
+}
+
+.binary-search-range,
+.algorithm-demo-status {
+  text-align: center;
+}
+
+.binary-search-range {
+  margin-top: 0.65rem;
+  color: var(--icons);
+  font-family: var(--mono-font);
+  font-size: 0.88em;
+}
+
+.algorithm-demo-status {
+  min-height: 2.8rem;
+  margin: 0.65rem 0 0;
+}
+
+@media (max-width: 560px) {
+  .algorithm-demo {
+    padding: 0.75rem;
+  }
+
+  .binary-search-array {
+    gap: 0.2rem;
+    grid-template-columns: repeat(9, minmax(1.85rem, 1fr));
+  }
+
+  .binary-search-cell {
+    min-height: 56px;
+    font-size: 0.82em;
+  }
+
+  .algorithm-demo-controls button {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .binary-search-cell {
+    transition: none;
+  }
+}

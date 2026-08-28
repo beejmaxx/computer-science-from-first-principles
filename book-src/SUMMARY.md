@@ -1,6 +1,7 @@
 # Summary
 
 [Introduction](README.md)
+[Curriculum](roadmap.md)
 
 # Collections
 
@@ -34,6 +35,6 @@
 
 - [Data-Structure Selection Guide](selection-guide.md)
 
-# Next tools
+# Algorithms
 
-- [Roadmap](roadmap.md)
+- [Binary Search](algorithms/binary-search.md)
