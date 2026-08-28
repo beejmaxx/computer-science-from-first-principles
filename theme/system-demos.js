@@ -408,6 +408,163 @@
     reset();
   }
 
+  function initializeVirtualMemory(root) {
+    const pageSize = 4096;
+    const frames = [5, 2, 7, 1, 6];
+    const makeSequence = (pages) => pages.map((vpn, index) => ({
+      vpn,
+      offset: (index * 192) % pageSize,
+    }));
+    const sequences = {
+      "one-page": makeSequence(Array(20).fill(2)),
+      "streaming-pages": makeSequence([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4]),
+      "working-set": makeSequence([0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1]),
+      thrashing: makeSequence([0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3]),
+    };
+
+    const patternInput = root.querySelector("[data-vm-pattern]");
+    const virtualElement = root.querySelector("[data-vm-virtual]");
+    const lookupElement = root.querySelector("[data-vm-lookup]");
+    const physicalElement = root.querySelector("[data-vm-physical]");
+    const tlbElement = root.querySelector("[data-vm-tlb]");
+    const pageTableElement = root.querySelector("[data-vm-page-table]");
+    const sequenceElement = root.querySelector("[data-vm-sequence]");
+    const status = root.querySelector("[data-vm-status]");
+    const accessesElement = root.querySelector("[data-vm-accesses]");
+    const hitsElement = root.querySelector("[data-vm-hits]");
+    const walksElement = root.querySelector("[data-vm-walks]");
+    const stepButton = root.querySelector('[data-vm-action="step"]');
+    const runButton = root.querySelector('[data-vm-action="run"]');
+    const resetButton = root.querySelector('[data-vm-action="reset"]');
+
+    let sequence;
+    let cursor;
+    let tlb;
+    let hits;
+    let walks;
+    let current;
+    let results;
+    let timer = null;
+
+    const hex = (value) => `0x${value.toString(16).padStart(4, "0")}`;
+
+    function render(message) {
+      const next = cursor < sequence.length ? sequence[cursor] : null;
+      if (current) {
+        const virtualAddress = current.vpn * pageSize + current.offset;
+        const physicalAddress = current.frame * pageSize + current.offset;
+        virtualElement.innerHTML = `<span class="vm-stage-label">virtual address</span><strong>${hex(virtualAddress)}</strong><span>VPN ${current.vpn} + offset ${current.offset}</span>`;
+        lookupElement.innerHTML = `<span class="vm-stage-label">translation</span><strong>${current.hit ? "TLB hit" : "page-table walk"}</strong><span>VPN ${current.vpn} → frame ${current.frame}</span>`;
+        physicalElement.innerHTML = `<span class="vm-stage-label">physical address</span><strong>${hex(physicalAddress)}</strong><span>frame ${current.frame} + offset ${current.offset}</span>`;
+      } else {
+        virtualElement.innerHTML = '<span class="vm-stage-label">virtual address</span><strong>—</strong><span>VPN + offset</span>';
+        lookupElement.innerHTML = '<span class="vm-stage-label">translation</span><strong>—</strong><span>TLB or page table</span>';
+        physicalElement.innerHTML = '<span class="vm-stage-label">physical address</span><strong>—</strong><span>frame + offset</span>';
+      }
+
+      tlbElement.innerHTML = Array.from({ length: 3 }, (_, slot) => {
+        const entry = tlb[slot];
+        if (!entry) return '<span class="vm-entry"><span>empty</span><span>—</span></span>';
+        const currentClass = current?.vpn === entry.vpn ? " is-current" : "";
+        return `<span class="vm-entry is-present${currentClass}"><span>VPN ${entry.vpn}</span><span>frame ${entry.frame}</span></span>`;
+      }).join("");
+
+      pageTableElement.innerHTML = frames.map((frame, vpn) => {
+        const currentClass = current?.vpn === vpn ? " is-current" : "";
+        return `<span class="vm-entry${currentClass}"><span>VPN ${vpn}</span><span>frame ${frame}</span></span>`;
+      }).join("");
+
+      sequenceElement.innerHTML = sequence.map((access, index) => {
+        const classes = ["vm-access"];
+        if (results[index]?.hit) classes.push("is-hit");
+        if (results[index] && !results[index].hit) classes.push("is-walk");
+        if (index === cursor) classes.push("is-next");
+        return `<span class="${classes.join(" ")}" aria-label="access ${index}: virtual page ${access.vpn}">v${access.vpn}</span>`;
+      }).join("");
+
+      accessesElement.textContent = String(cursor);
+      hitsElement.textContent = String(hits);
+      walksElement.textContent = String(walks);
+      status.textContent = message || "All virtual pages are resident. A missing TLB entry requires translation work, not disk I/O.";
+
+      const done = cursor >= sequence.length;
+      stepButton.disabled = done || timer !== null;
+      runButton.disabled = done || timer !== null;
+      patternInput.disabled = timer !== null;
+      sequenceElement.setAttribute("aria-label", `Virtual-page access sequence with ${cursor} of ${sequence.length} translations completed, ${hits} TLB hits, and ${walks} page-table walks.`);
+
+      if (!current && next) virtualElement.setAttribute("aria-label", `Next virtual page is ${next.vpn} with offset ${next.offset}.`);
+    }
+
+    function translateNext() {
+      if (cursor >= sequence.length) return false;
+      const access = sequence[cursor];
+      const foundAt = tlb.findIndex((entry) => entry.vpn === access.vpn);
+      const hit = foundAt >= 0;
+      let evicted = null;
+
+      if (hit) {
+        hits += 1;
+        const [entry] = tlb.splice(foundAt, 1);
+        tlb.push(entry);
+      } else {
+        walks += 1;
+        if (tlb.length === 3) evicted = tlb.shift();
+        tlb.push({ vpn: access.vpn, frame: frames[access.vpn] });
+      }
+
+      current = {
+        ...access,
+        frame: frames[access.vpn],
+        hit,
+      };
+      results[cursor] = { hit };
+      cursor += 1;
+
+      let message = hit
+        ? `VPN ${access.vpn} hit in the TLB; reused frame ${current.frame}.`
+        : `VPN ${access.vpn} missed in the TLB; walked the page table and cached frame ${current.frame}.`;
+      if (evicted) message += ` Evicted VPN ${evicted.vpn} from the three-entry TLB.`;
+      if (cursor === sequence.length) message += ` Finished with ${hits} hits and ${walks} walks.`;
+      render(message);
+      return cursor < sequence.length;
+    }
+
+    function stopRun() {
+      const message = status.textContent;
+      if (timer !== null) {
+        clearInterval(timer);
+        timer = null;
+      }
+      render(message);
+    }
+
+    function reset() {
+      if (timer !== null) clearInterval(timer);
+      timer = null;
+      sequence = sequences[patternInput.value];
+      cursor = 0;
+      tlb = [];
+      hits = 0;
+      walks = 0;
+      current = null;
+      results = [];
+      render();
+    }
+
+    stepButton.addEventListener("click", translateNext);
+    runButton.addEventListener("click", () => {
+      if (timer !== null || cursor >= sequence.length) return;
+      timer = setInterval(() => {
+        if (!translateNext()) stopRun();
+      }, 300);
+      render("Running the selected virtual-page pattern…");
+    });
+    resetButton.addEventListener("click", reset);
+    patternInput.addEventListener("change", reset);
+    reset();
+  }
+
   function initialize() {
     document.querySelectorAll('[data-system-demo="memory-hierarchy"]')
       .forEach(initializeMemoryHierarchy);
@@ -415,6 +572,8 @@
       .forEach(initializeDataLayout);
     document.querySelectorAll('[data-system-demo="branch-prediction"]')
       .forEach(initializeBranchPrediction);
+    document.querySelectorAll('[data-system-demo="virtual-memory"]')
+      .forEach(initializeVirtualMemory);
   }
 
   if (document.readyState === "loading") {
