@@ -1,234 +1,346 @@
-# Data Layout — Array of Structures versus Structure of Arrays
+# Data Layout — Which Bytes Move Together?
 
-The same logical records can occupy memory in different orders. That order
-determines which fields share cache lines, which bytes a loop fetches but never
-uses, and how easily the CPU can process many values together.
+<p class="chapter-subtitle">The same logical records can place hot fields together, scatter them across columns, or carry cold bytes through every cache line.</p>
 
-<div class="system-demo" data-system-demo="data-layout">
+<p class="chapter-meta"><span><strong>Section</strong> The Machine</span><span><strong>Model</strong> AoS, SoA, and hot/cold splitting</span><span><strong>Goal</strong> Match representation to access</span></p>
+
+<div class="system-demo layout-lab" data-system-demo="data-layout">
   <div class="system-demo-controls" aria-label="Data-layout controls">
     <label class="system-demo-field">Layout
       <select data-layout-kind>
         <option value="aos">Array of structures</option>
         <option value="soa">Structure of arrays</option>
+        <option value="hot-cold">Hot/cold split</option>
       </select>
     </label>
     <label class="system-demo-field">Workload
       <select data-layout-workload>
         <option value="price">Price-only scan</option>
+        <option value="matching">Matching path</option>
         <option value="full">Full-record processing</option>
       </select>
     </label>
+    <label class="system-demo-field">AoS stride
+      <select data-layout-stride>
+        <option value="natural">56 B packed</option>
+        <option value="aligned">64 B aligned</option>
+      </select>
+    </label>
     <button type="button" data-layout-action="step">Process next record</button>
-    <button type="button" data-layout-action="run">Run workload</button>
+    <button type="button" data-layout-action="run" aria-pressed="false">Run</button>
     <button type="button" data-layout-action="reset">Reset</button>
   </div>
   <div class="system-demo-metrics" aria-live="polite">
     <span class="system-demo-metric"><strong data-layout-records>0</strong>records</span>
     <span class="system-demo-metric"><strong data-layout-lines>0</strong>lines fetched</span>
-    <span class="system-demo-metric"><strong data-layout-efficiency>0%</strong>useful bytes</span>
+    <span class="system-demo-metric"><strong data-layout-useful>0 B</strong>useful bytes</span>
+    <span class="system-demo-metric"><strong data-layout-waste>0 B</strong>unused bytes</span>
+    <span class="system-demo-metric"><strong data-layout-efficiency>—</strong>line utilization</span>
   </div>
+  <div class="layout-lab-heading"><strong>Physical byte order</strong><span data-layout-description>complete records are adjacent</span></div>
   <div class="layout-memory-lines" data-layout-memory role="img" aria-label="Conceptual record layout"></div>
-  <p class="layout-legend"><code>P</code> price · <code>S</code> size · <code>T</code> timestamp · each field 8 B</p>
+  <p class="layout-legend"><code>P</code> price · <code>Q</code> quantity · <code>T</code> timestamp · <code>I</code> order ID · <code>M</code> metadata · each cell 8 B</p>
+  <div class="layout-progress" data-layout-progress>next: record 0</div>
   <p class="system-demo-status" data-layout-status aria-live="polite"></p>
   <noscript>The interactive controls require JavaScript.</noscript>
 </div>
 
-The simulator uses eight records containing three 8-byte fields and conceptual
-64-byte cache lines. It counts a line once after it has been fetched and assumes
-the three lines remain resident. It isolates layout efficiency; it is not a
-timing model or a complete cache simulator.
+Run a **Price-only scan** with each layout. Then select **Matching path**, which
+reads price, quantity, and order ID. The useful computation is unchanged; only
+the physical grouping of bytes changes.
+
+The model contains eight logical orders. Each order has 56 useful bytes:
+
+~~~text
+price 8 | quantity 8 | timestamp 8 | order ID 8 | metadata 24
+~~~
+
+The AoS layout can use a 56-byte packed stride or an explicitly 64-byte-aligned
+stride with 8 bytes of tail padding. The SoA layout groups equal fields. The
+hot/cold layout keeps four 8-byte hot fields together and moves the 24-byte
+metadata into a separate region.
 
 ## When layout becomes a design decision
 
-Layout deserves deliberate attention when:
+Layout deserves attention when:
 
-- Hot loops process large batches of records.
+- Hot loops process large batches.
 - Most operations read only a subset of each record.
-- Data volume exceeds the fastest caches.
-- SIMD or accelerator-friendly contiguous inputs matter.
-- Cold metadata is making hot records unnecessarily large.
-- Measurement attributes meaningful time to loads, cache misses, or bandwidth.
+- The working set competes for cache capacity or memory bandwidth.
+- SIMD-friendly homogeneous inputs matter.
+- Cold metadata inflates critical-path records.
+- Separate threads write different fields and may false-share lines.
+- Profiling attributes meaningful time to loads, misses, or stalled execution.
 
-Keep the simplest representation until the access pattern is understood. A
-more specialized layout adds invariants and API complexity, which must earn
-their cost through a real workload.
+A specialized layout adds API and mutation invariants. It should earn that cost
+through a known access pattern and measurement.
 
-## 1. Array of structures
+## 1. Array of structures keeps records together
 
-An **array of structures** stores complete records next to one another:
+An **array of structures** stores one complete record after another:
 
-```text
-[P0 S0 T0] [P1 S1 T1] [P2 S2 T2] ...
-```
+~~~text
+[P0 Q0 T0 I0 M0...] [P1 Q1 T1 I1 M1...] ...
+~~~
 
-The direct Rust representation is a `Vec<Record>`:
+The direct Rust representation is a `Vec<Order>`:
 
-```rust
-#[derive(Clone, Copy)]
-struct Quote {
+~~~rust
+#[derive(Clone)]
+struct Order {
     price: u64,
-    size: u64,
+    quantity: u64,
     timestamp: u64,
+    id: u64,
+    metadata: [u64; 3],
 }
 
-fn notional(quotes: &[Quote]) -> u64 {
-    quotes.iter().map(|quote| quote.price * quote.size).sum()
+fn matching_checksum(orders: &[Order]) -> u64 {
+    orders
+        .iter()
+        .map(|order| order.price ^ order.quantity ^ order.id)
+        .sum()
 }
+~~~
 
-fn main() {
-    let quotes = [
-        Quote { price: 100, size: 4, timestamp: 10 },
-        Quote { price: 101, size: 3, timestamp: 11 },
-    ];
-    assert_eq!(notional(&quotes), 703);
-    assert_eq!(quotes[1].timestamp, 11);
-}
-```
+AoS is natural when an operation consumes or transfers one complete record. The
+type system keeps the fields together, and insertion or removal changes one
+collection.
 
-This layout is natural when operations consume most fields of one record at a
-time. A record can be borrowed, passed, inserted, or removed as one value, and
-the type system keeps its fields together automatically.
+A narrow scan may fetch mostly irrelevant bytes. With a 64-byte-aligned record,
+reading an 8-byte price uses one eighth of every transferred line.
 
-The drawback appears when a loop needs only `price`: every fetched line also
-contains sizes and timestamps that the loop may not use.
+## 2. Structure of arrays keeps fields together
 
-## 2. Structure of arrays
+A **structure of arrays** stores each field in a separate contiguous sequence:
 
-A **structure of arrays** stores each field in its own contiguous sequence:
+~~~text
+[P0 P1 P2 P3 ...]
+[Q0 Q1 Q2 Q3 ...]
+[T0 T1 T2 T3 ...]
+[I0 I1 I2 I3 ...]
+[M0 M1 M2 M3 ...]
+~~~
 
-```text
-[P0 P1 P2 ...]
-[S0 S1 S2 ...]
-[T0 T1 T2 ...]
-```
-
-```rust
-#[derive(Debug, PartialEq)]
-struct Quote {
-    price: u64,
-    size: u64,
-    timestamp: u64,
-}
-
-struct QuoteColumns {
+~~~rust
+struct OrderColumns {
     prices: Vec<u64>,
-    sizes: Vec<u64>,
+    quantities: Vec<u64>,
     timestamps: Vec<u64>,
+    ids: Vec<u64>,
+    metadata_0: Vec<u64>,
+    metadata_1: Vec<u64>,
+    metadata_2: Vec<u64>,
 }
 
-impl QuoteColumns {
-    fn push(&mut self, quote: Quote) {
-        self.prices.push(quote.price);
-        self.sizes.push(quote.size);
-        self.timestamps.push(quote.timestamp);
+impl OrderColumns {
+    fn len(&self) -> usize {
+        self.prices.len()
     }
 
-    fn get(&self, index: usize) -> Option<Quote> {
-        Some(Quote {
-            price: *self.prices.get(index)?,
-            size: *self.sizes.get(index)?,
-            timestamp: *self.timestamps.get(index)?,
-        })
+    fn invariant_holds(&self) -> bool {
+        let len = self.len();
+        self.quantities.len() == len
+            && self.timestamps.len() == len
+            && self.ids.len() == len
+            && self.metadata_0.len() == len
+            && self.metadata_1.len() == len
+            && self.metadata_2.len() == len
     }
 }
+~~~
 
-fn main() {
-    let mut quotes = QuoteColumns {
-        prices: Vec::new(),
-        sizes: Vec::new(),
-        timestamps: Vec::new(),
-    };
-    quotes.push(Quote { price: 100, size: 4, timestamp: 10 });
-    assert_eq!(quotes.get(0), Some(Quote { price: 100, size: 4, timestamp: 10 }));
+A price scan now transfers dense prices without order IDs or metadata. Separate
+homogeneous arrays can also give a compiler straightforward vector inputs.
+
+The representation introduces a central invariant:
+
+~~~text
+prices.len == quantities.len == timestamps.len == ids.len
+           == metadata_0.len == metadata_1.len == metadata_2.len
+~~~
+
+Insertion, removal, permutation, error handling, and recovery must preserve row
+identity across every column. Hiding the columns behind an API is part of making
+the representation correct.
+
+## 3. Hot/cold splitting is often the practical middle
+
+Many systems are neither purely record-oriented nor purely analytical. A hybrid
+keeps critical fields compact and resolves cold information only when needed:
+
+~~~text
+hot orders:  [P Q T I] [P Q T I] [P Q T I] ...
+cold table:  [metadata] [metadata] [metadata] ...
+~~~
+
+The lab's hot record is 32 bytes, so two fit in a 64-byte line. The matching-path
+scan uses three quarters of the hot bytes it fetches while avoiding metadata.
+
+The costs are another lookup and an identity/lifetime relationship between the
+two regions. Stable handles or dense indices can connect them; ordinary borrowed
+references cannot outlive a relocation of either backing collection.
+
+## 4. Alignment and padding are different ideas
+
+**Alignment** restricts the addresses at which a value may begin. **Padding** is
+unused space inserted between fields or at the end of a value so alignment and
+stride constraints are satisfied.
+
+Consider a stable C-compatible layout:
+
+~~~rust
+#[repr(C)]
+struct Message {
+    kind: u8,
+    sequence: u64,
+    side: u8,
 }
-```
+~~~
 
-A price-only scan now reads a dense price array without transferring unrelated
-fields. Separate homogeneous arrays can also make vectorized processing easier.
+The `u64` normally requires stronger alignment than `u8`, so padding can appear
+before `sequence` and after `side`. Reordering fields may reduce size, but it can
+also change ABI and wire compatibility.
 
-The cost is a new invariant:
+Explicit cache-line alignment is a much stronger choice:
 
-```text
-prices.len() == sizes.len() == timestamps.len()
-```
+~~~rust
+#[repr(C, align(64))]
+struct AlignedCounter {
+    value: std::sync::atomic::AtomicU64,
+}
+~~~
 
-Every insert, removal, reorder, and error path must preserve it. Hiding the
-columns behind methods is therefore part of the representation, not optional
-API decoration.
+The alignment can isolate independently written counters, but it also expands
+their stride and working set. Alignment is not free speed; it trades density for
+placement guarantees.
 
-## 3. The workload decides
+In C++, the corresponding tools include `alignas`, `sizeof`, and `alignof`.
+Always inspect the compiled target rather than inferring byte offsets from how the
+declaration looks.
 
-| Access pattern | Often favors |
-|---|---|
-| Read or update one complete record | Array of structures |
-| Scan one field across many records | Structure of arrays |
-| Pass records through record-oriented APIs | Array of structures |
-| Batch arithmetic over homogeneous values | Structure of arrays |
-| Frequent insertion and removal of whole records | Usually array of structures |
-| Stable column lengths and large analytical scans | Structure of arrays |
+## 5. Field order changes holes and line crossings
 
-These are tendencies, not guarantees. Record size, alignment, selected fields,
-batch size, compiler optimization, and hardware all affect the result.
+For a representation with a specified field order, placing strongly aligned
+fields first can reduce internal holes:
 
-## 4. Hot and cold field separation
+~~~text
+less compact:  u8 | padding | u64 | u8 | tail padding
+more compact:  u64 | u8 | u8 | tail padding
+~~~
 
-The choice is not limited to two extremes. A system can keep fields used on the
-critical path together and move rarely accessed metadata elsewhere:
+Minimum total size is not always the objective. You might deliberately:
 
-```text
-hot record:  price | size | side | state
-cold table:  text | audit metadata | diagnostics | optional attributes
-```
+- Keep fields read together on the same line.
+- Separate fields written by different threads.
+- Align the beginning of a batch for vector loads.
+- Pad a ring entry to a fixed protocol or device descriptor size.
+- Move rarely inspected diagnostic state out of the hot record.
 
-The hot record becomes smaller, so more of them fit in a line. The cold data is
-resolved only when required. This is often easier to integrate into a
-record-oriented design than converting everything into separate columns.
+The best field order follows access and ownership, not aesthetic sorting.
 
-The tradeoff is another lookup and another lifetime relationship between hot
-and cold storage.
+## 6. Cache-line boundaries are shared-resource boundaries
 
-## 5. Layout and vectorization
+Two objects can be logically independent while occupying one physical line. If
+different cores repeatedly write them, coherence operates on the entire line.
+That is **false sharing**: no source-level variable is shared, but the cache line
+is.
 
-SIMD instructions apply one operation to several values at once. A contiguous
-array of one numeric type is a convenient input:
+Padding can separate writers, yet padding every object may make reads worse by
+reducing density. The later [Coherence and False Sharing](../concurrency/cache-coherence.md)
+chapter will model ownership transfer between cores.
 
-```text
+## 7. Layout and vectorization
+
+SIMD instructions apply one operation to several lanes. Dense homogeneous values
+are convenient inputs:
+
+~~~text
 prices: [100, 101, 102, 103, 104, 105, 106, 107]
-```
+~~~
 
-Interleaved records require the processor or compiler to gather the desired
-fields before applying the same operation. Modern hardware can support gathers,
-but contiguous loads remain a valuable target when the workload naturally
-processes columns.
+Interleaved AoS fields may need shuffles or gathers before the arithmetic. Modern
+processors support increasingly capable gather operations, but “vectorizable”
+does not automatically mean “faster”: setup, masks, tails, code size, and memory
+traffic still matter.
 
-Do not rewrite code around assumed vectorization. Inspect optimized output or
-profiling results and measure a representative batch.
+Inspect optimized output and measure the representative batch. The [SIMD](simd.md)
+chapter develops this separately.
 
-## 6. Rust layout is not a serialization contract
+## 8. Mutation can reverse the apparent winner
 
-Rust may insert padding so fields satisfy alignment requirements. The default
-representation does not promise a stable cross-version or foreign-language
-layout. `#[repr(C)]` provides C-compatible ordering and alignment rules when an
-interface requires them, but padding may still exist.
+A scan benchmark can make SoA look universally superior while ignoring updates:
 
-Avoid treating ordinary structs as byte slices or network messages through
-unchecked casts. In-memory layout, wire format, and persistent format are
-different contracts even when their fields look similar.
+- Inserting one logical row modifies every column.
+- Removing by swap changes row identity unless indices are repaired.
+- Stable external handles need an indirection or generation scheme.
+- Exception or allocation failure can leave partially updated columns in C++ if
+  the operation is not transactional.
+- Concurrent readers need a publication rule covering every related column.
 
-## 7. What you should internalize
+AoS often makes row-level mutation simpler. Hot/cold splitting can keep the hot
+index stable while cold data follows a separate lifecycle. Representation must be
+evaluated over its complete workload, not one attractive scan.
+
+## 9. In-memory layout is not a wire or storage format
+
+Rust's default representation does not promise stable field order for foreign
+interfaces or persistence. `#[repr(C)]` supplies C-compatible layout rules, but
+padding still exists and endianness is not solved. C++ object layout likewise
+does not turn an arbitrary object into a portable packet.
+
+Do not serialize structs by dumping their memory unless the format explicitly
+defines every byte and the implementation safely enforces that contract. Network
+messages and durable data require explicit field widths, byte order, versioning,
+and validation.
+
+## 10. How to choose with evidence
+
+Benchmark at least the following dimensions:
+
+1. The real ratio of narrow scans, matching-path reads, full reads, and mutations.
+2. Working sets below and above expected cache capacities.
+3. Cold-start and steady-state behavior.
+4. Useful bytes versus transferred bytes.
+5. Scalar and vectorized implementations.
+6. Allocation and compaction costs.
+7. Single-threaded access and realistic cross-core ownership.
+8. Tail latency under the target load, not only maximum scan throughput.
+
+Use compiler layout reports, `size_of`/`align_of`, optimized assembly, and hardware
+counters to test the model. Do not infer a processor's cache traffic solely from
+the source type.
+
+## 11. What you should internalize
 
 1. Logical records do not dictate one physical layout.
-2. Array of structures keeps each record together.
-3. Structure of arrays keeps each field together.
-4. A field-only scan can waste bandwidth when unrelated fields share its lines.
-5. Full-record processing often benefits from record locality and simpler APIs.
-6. Columnar storage introduces length and mutation invariants.
-7. Hybrid hot/cold layouts are often more practical than either extreme.
-8. Choose from the measured access pattern, not from a universal layout rule.
+2. AoS keeps records together; SoA keeps fields together.
+3. Hot/cold splitting is a useful third design, not a compromise to ignore.
+4. Alignment restricts placement; padding consumes bytes to satisfy placement or
+   stride decisions.
+5. Smaller types do not guarantee a smaller struct when holes dominate.
+6. Field-only scans can waste most bytes in an AoS line.
+7. SoA introduces cross-column identity and mutation invariants.
+8. Cache lines define coherence traffic as well as transfer size.
+9. In-memory, wire, and persistent layouts are separate contracts.
+10. The winning layout is the one that serves the complete measured workload.
 
-## Exercise
+## Retrieval drill
 
-Add a `side: u8` and a 32-byte identifier to the conceptual quote. Decide which
-fields belong on the hot path for a price-and-size aggregation. Design an AoS,
-SoA, or hybrid representation, then list the invariants its insertion and
-removal methods must preserve.
+Using the lab's eight-record model:
+
+1. Why does a price-only SoA scan need one line?
+2. Why can 64-byte AoS alignment reduce price-scan utilization to 12.5%?
+3. Which bytes move during the matching workload under the hot/cold layout?
+4. What invariant must a SoA removal preserve?
+5. When could adding padding lower cross-core latency while raising scan latency?
+
+## Sources
+
+- [Rust Reference: type layout](https://doc.rust-lang.org/reference/type-layout.html)
+- Denis Bakhvalov et al., [*Performance Analysis and Tuning on Modern CPUs*](https://github.com/dendibakh/perf-book)
+- [Intel 64 and IA-32 Architectures Optimization Reference Manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel64-and-ia32-architectures-optimization.html)
+
+The examples establish reasoning tools, not a universal ABI or cache geometry.
+Confirm sizes, offsets, alignments, generated code, and counters for the exact
+compiler and processor used in an experiment.

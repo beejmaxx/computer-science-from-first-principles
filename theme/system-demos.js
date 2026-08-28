@@ -230,97 +230,161 @@
   }
 
   function initializeDataLayout(root) {
-    const fieldNames = { P: "price", S: "size", T: "timestamp" };
+    const fieldNames = {
+      P: "price",
+      Q: "quantity",
+      T: "timestamp",
+      I: "order ID",
+      M0: "metadata chunk 1",
+      M1: "metadata chunk 2",
+      M2: "metadata chunk 3",
+    };
+    const allFields = ["P", "Q", "T", "I", "M0", "M1", "M2"];
+    const hotFields = ["P", "Q", "T", "I"];
+    const metadataFields = ["M0", "M1", "M2"];
     const layoutInput = root.querySelector("[data-layout-kind]");
     const workloadInput = root.querySelector("[data-layout-workload]");
+    const strideInput = root.querySelector("[data-layout-stride]");
     const memory = root.querySelector("[data-layout-memory]");
+    const descriptionElement = root.querySelector("[data-layout-description]");
+    const progressElement = root.querySelector("[data-layout-progress]");
     const status = root.querySelector("[data-layout-status]");
     const recordsElement = root.querySelector("[data-layout-records]");
     const linesElement = root.querySelector("[data-layout-lines]");
+    const usefulElement = root.querySelector("[data-layout-useful]");
+    const wasteElement = root.querySelector("[data-layout-waste]");
     const efficiencyElement = root.querySelector("[data-layout-efficiency]");
     const stepButton = root.querySelector('[data-layout-action="step"]');
     const runButton = root.querySelector('[data-layout-action="run"]');
     const resetButton = root.querySelector('[data-layout-action="reset"]');
 
-    let entries;
-    let cursor;
-    let accessed;
-    let loadedLines;
-    let currentKeys;
+    let entries = [];
+    let cursor = 0;
+    let accessed = new Set();
+    let loadedLines = new Set();
+    let currentKeys = new Set();
     let timer = null;
+    let lastMessage = "";
 
-    const keyOf = (field, record) => `${field}${record}`;
-    const workloadFields = () => workloadInput.value === "price"
-      ? ["P"]
-      : ["P", "S", "T"];
+    const keyOf = (field, record) => `${field}:${record}`;
+
+    function workloadFields() {
+      if (workloadInput.value === "price") return ["P"];
+      if (workloadInput.value === "matching") return ["P", "Q", "I"];
+      return allFields;
+    }
+
+    function entry(field, record, region) {
+      return { field, record, region, padding: false };
+    }
 
     function makeEntries() {
       const result = [];
       if (layoutInput.value === "aos") {
         for (let record = 0; record < 8; record += 1) {
-          for (const field of ["P", "S", "T"]) result.push({ field, record });
+          for (const field of allFields) result.push(entry(field, record, `record ${record}`));
+          if (strideInput.value === "aligned") {
+            result.push({ field: "PAD", record, region: `record ${record}`, padding: true });
+          }
+        }
+      } else if (layoutInput.value === "soa") {
+        for (const field of allFields) {
+          for (let record = 0; record < 8; record += 1) {
+            result.push(entry(field, record, fieldNames[field]));
+          }
         }
       } else {
-        for (const field of ["P", "S", "T"]) {
-          for (let record = 0; record < 8; record += 1) result.push({ field, record });
+        for (let record = 0; record < 8; record += 1) {
+          for (const field of hotFields) result.push(entry(field, record, "hot"));
+        }
+        for (let record = 0; record < 8; record += 1) {
+          for (const field of metadataFields) result.push(entry(field, record, "cold"));
         }
       }
       return result;
     }
 
+    function displayField(item) {
+      if (item.padding) return "pad";
+      if (item.field.startsWith("M")) {
+        return `M${item.record}${String.fromCharCode(97 + Number(item.field.slice(1)))}`;
+      }
+      return `${item.field}${item.record}`;
+    }
+
+    function describeLayout() {
+      if (layoutInput.value === "aos") {
+        return strideInput.value === "aligned"
+          ? "complete 56-byte records use an explicit 64-byte stride"
+          : "complete 56-byte records are packed and may cross lines";
+      }
+      if (layoutInput.value === "soa") return "equal fields form contiguous columns";
+      return "32-byte hot records are separated from 24-byte cold metadata";
+    }
+
     function render(message) {
-      memory.innerHTML = Array.from({ length: 3 }, (_, line) => {
+      const lineCount = Math.ceil(entries.length / 8);
+      memory.innerHTML = Array.from({ length: lineCount }, (_, line) => {
         const lineEntries = entries.slice(line * 8, line * 8 + 8);
         const lineClasses = ["layout-memory-line"];
         if (loadedLines.has(line)) lineClasses.push("is-loaded");
-        if (lineEntries.some(({ field, record }) => currentKeys.has(keyOf(field, record)))) {
+        if (lineEntries.some(({ field, record, padding }) => !padding && currentKeys.has(keyOf(field, record)))) {
           lineClasses.push("is-current");
         }
 
-        const fields = lineEntries.map(({ field, record }) => {
-          const key = keyOf(field, record);
+        const regions = [...new Set(lineEntries.map((item) => item.region))];
+        const region = regions.length > 2 ? "mixed records" : regions.join(" / ");
+        const fields = lineEntries.map((item) => {
+          const key = keyOf(item.field, item.record);
           const fieldClasses = ["layout-field"];
-          if (accessed.has(key)) fieldClasses.push("is-used");
-          if (currentKeys.has(key)) fieldClasses.push("is-current");
-          return `<span class="${fieldClasses.join(" ")}" aria-label="${fieldNames[field]} for record ${record}">${key}</span>`;
+          fieldClasses.push(item.padding ? "is-padding" : `is-${item.field.charAt(0).toLowerCase()}`);
+          if (!item.padding && accessed.has(key)) fieldClasses.push("is-used");
+          if (!item.padding && currentKeys.has(key)) fieldClasses.push("is-current");
+          const label = item.padding ? "8 bytes of padding" : `${fieldNames[item.field]} for record ${item.record}`;
+          return `<span class="${fieldClasses.join(" ")}" aria-label="${label}">${displayField(item)}</span>`;
         }).join("");
 
-        return `<div class="${lineClasses.join(" ")}"><div class="layout-line-label">cache line ${line} · 64 B</div><div class="layout-fields">${fields}</div></div>`;
+        return `<div class="${lineClasses.join(" ")}"><div class="layout-line-label"><span>cache line ${line} · 64 B</span><small>${region}</small></div><div class="layout-fields">${fields}</div></div>`;
       }).join("");
 
       const usefulBytes = accessed.size * 8;
       const fetchedBytes = loadedLines.size * 64;
+      const wastedBytes = Math.max(0, fetchedBytes - usefulBytes);
       const efficiency = fetchedBytes === 0 ? 0 : Math.round((usefulBytes / fetchedBytes) * 100);
       recordsElement.textContent = String(cursor);
       linesElement.textContent = String(loadedLines.size);
-      efficiencyElement.textContent = `${efficiency}%`;
+      usefulElement.textContent = `${usefulBytes} B`;
+      wasteElement.textContent = `${wastedBytes} B`;
+      efficiencyElement.textContent = fetchedBytes === 0 ? "—" : `${efficiency}%`;
+      descriptionElement.textContent = describeLayout();
+      progressElement.textContent = cursor < 8 ? `next: record ${cursor}` : "workload complete";
 
-      if (message) {
-        status.textContent = message;
-      } else {
-        const layout = layoutInput.value === "aos" ? "records keep their fields together" : "each field forms its own contiguous array";
-        const workload = workloadInput.value === "price" ? "reads only prices" : "reads every field";
-        status.textContent = `This layout ${layout}; the workload ${workload}.`;
-      }
+      lastMessage = message || `This layout ${describeLayout()}; the workload reads ${workloadFields().map((field) => fieldNames[field]).join(", ")}.`;
+      status.textContent = lastMessage;
 
       const done = cursor >= 8;
       stepButton.disabled = done || timer !== null;
-      runButton.disabled = done || timer !== null;
+      runButton.disabled = done && timer === null;
+      runButton.textContent = timer === null ? "Run" : "Pause";
+      runButton.setAttribute("aria-pressed", timer === null ? "false" : "true");
       layoutInput.disabled = timer !== null;
       workloadInput.disabled = timer !== null;
-      memory.setAttribute("aria-label", `Three conceptual cache lines in ${layoutInput.value === "aos" ? "array-of-structures" : "structure-of-arrays"} layout. ${loadedLines.size} lines have been loaded.`);
+      strideInput.disabled = timer !== null || layoutInput.value !== "aos";
+      memory.setAttribute("aria-label", `${lineCount} conceptual cache lines in ${layoutInput.options[layoutInput.selectedIndex].text} layout. ${loadedLines.size} lines have been fetched.`);
     }
 
     function processNextRecord() {
       if (cursor >= 8) return false;
       const record = cursor;
-      const wanted = workloadFields().map((field) => keyOf(field, record));
+      const wantedFields = workloadFields();
+      const wanted = wantedFields.map((field) => keyOf(field, record));
       currentKeys = new Set(wanted);
       const touchedLines = new Set();
       let newLines = 0;
 
       for (let position = 0; position < entries.length; position += 1) {
         const entry = entries[position];
+        if (entry.padding) continue;
         const key = keyOf(entry.field, entry.record);
         if (!currentKeys.has(key)) continue;
         const line = Math.floor(position / 8);
@@ -333,25 +397,23 @@
       }
 
       cursor += 1;
-      const fields = workloadFields().map((field) => fieldNames[field]).join(", ");
+      const fields = wantedFields.map((field) => fieldNames[field]).join(", ");
       let message = `Record ${record}: read ${fields} from line${touchedLines.size === 1 ? "" : "s"} ${[...touchedLines].join(", ")}; loaded ${newLines} new line${newLines === 1 ? "" : "s"}.`;
       if (cursor === 8) message += " Workload complete.";
       render(message);
       return cursor < 8;
     }
 
-    function stopRun() {
-      const message = status.textContent;
+    function stopRun(message) {
       if (timer !== null) {
         clearInterval(timer);
         timer = null;
       }
-      render(message);
+      render(message || lastMessage);
     }
 
     function reset() {
-      if (timer !== null) clearInterval(timer);
-      timer = null;
+      stopRun();
       entries = makeEntries();
       cursor = 0;
       accessed = new Set();
@@ -362,15 +424,19 @@
 
     stepButton.addEventListener("click", processNextRecord);
     runButton.addEventListener("click", () => {
-      if (timer !== null || cursor >= 8) return;
+      if (timer !== null) {
+        stopRun("Paused. Fetched lines and record progress are preserved.");
+        return;
+      }
+      if (cursor >= 8) return;
       timer = setInterval(() => {
         if (!processNextRecord()) stopRun();
       }, 300);
       render("Running the selected workload…");
     });
     resetButton.addEventListener("click", reset);
-    layoutInput.addEventListener("change", reset);
-    workloadInput.addEventListener("change", reset);
+    [layoutInput, workloadInput, strideInput]
+      .forEach((input) => input.addEventListener("change", reset));
     reset();
   }
 
