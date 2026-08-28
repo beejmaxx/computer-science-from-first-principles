@@ -287,11 +287,134 @@
     reset();
   }
 
+  function initializeBranchPrediction(root) {
+    const sequences = {
+      grouped: "NNNNNNNNNNTTTTTTTTTTTTTT",
+      "mostly-taken": "TTTNTTTTTNTTTTNTTTTTNTTT",
+      alternating: "TNTNTNTNTNTNTNTNTNTNTNTN",
+      mixed: "TNN TTT NNT TNT NTT NNT TTN TNN".replaceAll(" ", ""),
+    };
+    const stateLabels = [
+      "strongly not taken",
+      "weakly not taken",
+      "weakly taken",
+      "strongly taken",
+    ];
+
+    const patternInput = root.querySelector("[data-branch-pattern]");
+    const statesElement = root.querySelector("[data-branch-states]");
+    const predictionElement = root.querySelector("[data-branch-prediction]");
+    const outcomesElement = root.querySelector("[data-branch-outcomes]");
+    const status = root.querySelector("[data-branch-status]");
+    const branchesElement = root.querySelector("[data-branch-count]");
+    const missesElement = root.querySelector("[data-branch-misses]");
+    const accuracyElement = root.querySelector("[data-branch-accuracy]");
+    const stepButton = root.querySelector('[data-branch-action="step"]');
+    const runButton = root.querySelector('[data-branch-action="run"]');
+    const resetButton = root.querySelector('[data-branch-action="reset"]');
+
+    let sequence;
+    let cursor;
+    let predictorState;
+    let misses;
+    let results;
+    let timer = null;
+
+    const prediction = () => predictorState >= 2;
+    const outcomeName = (taken) => taken ? "taken" : "not taken";
+
+    function render(message) {
+      statesElement.innerHTML = stateLabels.map((label, state) =>
+        `<span class="branch-state${state === predictorState ? " is-current" : ""}">${state}<br>${label}</span>`
+      ).join("");
+
+      predictionElement.textContent = cursor >= sequence.length
+        ? `final state: ${stateLabels[predictorState]}`
+        : `current prediction: ${outcomeName(prediction())}`;
+
+      outcomesElement.innerHTML = sequence.map((taken, index) => {
+        const classes = ["branch-outcome"];
+        if (results[index]?.correct) classes.push("is-correct");
+        if (results[index] && !results[index].correct) classes.push("is-miss");
+        if (index === cursor) classes.push("is-next");
+        return `<span class="${classes.join(" ")}" aria-label="branch ${index}: ${outcomeName(taken)}">${taken ? "T" : "N"}</span>`;
+      }).join("");
+
+      const accuracy = cursor === 0 ? 0 : Math.round(((cursor - misses) / cursor) * 100);
+      branchesElement.textContent = String(cursor);
+      missesElement.textContent = String(misses);
+      accuracyElement.textContent = `${accuracy}%`;
+      status.textContent = message || "The predictor begins weakly not taken. Step through the actual outcomes and watch it adapt.";
+
+      const done = cursor >= sequence.length;
+      stepButton.disabled = done || timer !== null;
+      runButton.disabled = done || timer !== null;
+      patternInput.disabled = timer !== null;
+      outcomesElement.setAttribute("aria-label", `Branch outcome sequence with ${cursor} of ${sequence.length} outcomes processed and ${misses} mispredictions.`);
+    }
+
+    function processNextBranch() {
+      if (cursor >= sequence.length) return false;
+      const actual = sequence[cursor];
+      const predicted = prediction();
+      const previousState = predictorState;
+      const correct = predicted === actual;
+      if (!correct) misses += 1;
+      results[cursor] = { correct, predicted };
+
+      if (actual) {
+        predictorState = Math.min(3, predictorState + 1);
+      } else {
+        predictorState = Math.max(0, predictorState - 1);
+      }
+
+      cursor += 1;
+      let message = `Predicted ${outcomeName(predicted)}; actual outcome was ${outcomeName(actual)}: ${correct ? "correct" : "misprediction"}. State ${previousState} → ${predictorState}.`;
+      if (cursor === sequence.length) message += ` Finished with ${misses} mispredictions.`;
+      render(message);
+      return cursor < sequence.length;
+    }
+
+    function stopRun() {
+      const message = status.textContent;
+      if (timer !== null) {
+        clearInterval(timer);
+        timer = null;
+      }
+      render(message);
+    }
+
+    function reset() {
+      if (timer !== null) clearInterval(timer);
+      timer = null;
+      sequence = [...sequences[patternInput.value]].map((outcome) => outcome === "T");
+      cursor = 0;
+      predictorState = 1;
+      misses = 0;
+      results = [];
+      render();
+    }
+
+    stepButton.addEventListener("click", processNextBranch);
+    runButton.addEventListener("click", () => {
+      if (timer !== null || cursor >= sequence.length) return;
+      timer = setInterval(() => {
+        if (!processNextBranch()) stopRun();
+      }, 280);
+      render("Running the selected branch pattern…");
+    });
+    resetButton.addEventListener("click", reset);
+    patternInput.addEventListener("change", reset);
+    reset();
+  }
+
   function initialize() {
     document.querySelectorAll('[data-system-demo="memory-hierarchy"]')
       .forEach(initializeMemoryHierarchy);
     document.querySelectorAll('[data-system-demo="data-layout"]')
       .forEach(initializeDataLayout);
+    document.querySelectorAll('[data-system-demo="branch-prediction"]')
+      .forEach(initializeBranchPrediction);
   }
 
   if (document.readyState === "loading") {

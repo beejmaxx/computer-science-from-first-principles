@@ -34,3 +34,4 @@
 
 - [Memory Hierarchy](systems/memory-hierarchy.md)
 - [Data Layout](systems/data-layout.md)
+- [Branch Prediction](systems/branch-prediction.md)
