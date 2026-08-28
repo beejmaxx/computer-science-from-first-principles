@@ -36,3 +36,4 @@
 - [Data Layout](systems/data-layout.md)
 - [Branch Prediction](systems/branch-prediction.md)
 - [Virtual Memory and the TLB](systems/virtual-memory.md)
+- [Allocation and Memory Reuse](systems/allocation.md)
