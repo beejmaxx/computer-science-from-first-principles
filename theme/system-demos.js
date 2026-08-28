@@ -142,9 +142,156 @@
     reset();
   }
 
+  function initializeDataLayout(root) {
+    const fieldNames = { P: "price", S: "size", T: "timestamp" };
+    const layoutInput = root.querySelector("[data-layout-kind]");
+    const workloadInput = root.querySelector("[data-layout-workload]");
+    const memory = root.querySelector("[data-layout-memory]");
+    const status = root.querySelector("[data-layout-status]");
+    const recordsElement = root.querySelector("[data-layout-records]");
+    const linesElement = root.querySelector("[data-layout-lines]");
+    const efficiencyElement = root.querySelector("[data-layout-efficiency]");
+    const stepButton = root.querySelector('[data-layout-action="step"]');
+    const runButton = root.querySelector('[data-layout-action="run"]');
+    const resetButton = root.querySelector('[data-layout-action="reset"]');
+
+    let entries;
+    let cursor;
+    let accessed;
+    let loadedLines;
+    let currentKeys;
+    let timer = null;
+
+    const keyOf = (field, record) => `${field}${record}`;
+    const workloadFields = () => workloadInput.value === "price"
+      ? ["P"]
+      : ["P", "S", "T"];
+
+    function makeEntries() {
+      const result = [];
+      if (layoutInput.value === "aos") {
+        for (let record = 0; record < 8; record += 1) {
+          for (const field of ["P", "S", "T"]) result.push({ field, record });
+        }
+      } else {
+        for (const field of ["P", "S", "T"]) {
+          for (let record = 0; record < 8; record += 1) result.push({ field, record });
+        }
+      }
+      return result;
+    }
+
+    function render(message) {
+      memory.innerHTML = Array.from({ length: 3 }, (_, line) => {
+        const lineEntries = entries.slice(line * 8, line * 8 + 8);
+        const lineClasses = ["layout-memory-line"];
+        if (loadedLines.has(line)) lineClasses.push("is-loaded");
+        if (lineEntries.some(({ field, record }) => currentKeys.has(keyOf(field, record)))) {
+          lineClasses.push("is-current");
+        }
+
+        const fields = lineEntries.map(({ field, record }) => {
+          const key = keyOf(field, record);
+          const fieldClasses = ["layout-field"];
+          if (accessed.has(key)) fieldClasses.push("is-used");
+          if (currentKeys.has(key)) fieldClasses.push("is-current");
+          return `<span class="${fieldClasses.join(" ")}" aria-label="${fieldNames[field]} for record ${record}">${key}</span>`;
+        }).join("");
+
+        return `<div class="${lineClasses.join(" ")}"><div class="layout-line-label">cache line ${line} · 64 B</div><div class="layout-fields">${fields}</div></div>`;
+      }).join("");
+
+      const usefulBytes = accessed.size * 8;
+      const fetchedBytes = loadedLines.size * 64;
+      const efficiency = fetchedBytes === 0 ? 0 : Math.round((usefulBytes / fetchedBytes) * 100);
+      recordsElement.textContent = String(cursor);
+      linesElement.textContent = String(loadedLines.size);
+      efficiencyElement.textContent = `${efficiency}%`;
+
+      if (message) {
+        status.textContent = message;
+      } else {
+        const layout = layoutInput.value === "aos" ? "records keep their fields together" : "each field forms its own contiguous array";
+        const workload = workloadInput.value === "price" ? "reads only prices" : "reads every field";
+        status.textContent = `This layout ${layout}; the workload ${workload}.`;
+      }
+
+      const done = cursor >= 8;
+      stepButton.disabled = done || timer !== null;
+      runButton.disabled = done || timer !== null;
+      layoutInput.disabled = timer !== null;
+      workloadInput.disabled = timer !== null;
+      memory.setAttribute("aria-label", `Three conceptual cache lines in ${layoutInput.value === "aos" ? "array-of-structures" : "structure-of-arrays"} layout. ${loadedLines.size} lines have been loaded.`);
+    }
+
+    function processNextRecord() {
+      if (cursor >= 8) return false;
+      const record = cursor;
+      const wanted = workloadFields().map((field) => keyOf(field, record));
+      currentKeys = new Set(wanted);
+      const touchedLines = new Set();
+      let newLines = 0;
+
+      for (let position = 0; position < entries.length; position += 1) {
+        const entry = entries[position];
+        const key = keyOf(entry.field, entry.record);
+        if (!currentKeys.has(key)) continue;
+        const line = Math.floor(position / 8);
+        touchedLines.add(line);
+        accessed.add(key);
+        if (!loadedLines.has(line)) {
+          loadedLines.add(line);
+          newLines += 1;
+        }
+      }
+
+      cursor += 1;
+      const fields = workloadFields().map((field) => fieldNames[field]).join(", ");
+      let message = `Record ${record}: read ${fields} from line${touchedLines.size === 1 ? "" : "s"} ${[...touchedLines].join(", ")}; loaded ${newLines} new line${newLines === 1 ? "" : "s"}.`;
+      if (cursor === 8) message += " Workload complete.";
+      render(message);
+      return cursor < 8;
+    }
+
+    function stopRun() {
+      const message = status.textContent;
+      if (timer !== null) {
+        clearInterval(timer);
+        timer = null;
+      }
+      render(message);
+    }
+
+    function reset() {
+      if (timer !== null) clearInterval(timer);
+      timer = null;
+      entries = makeEntries();
+      cursor = 0;
+      accessed = new Set();
+      loadedLines = new Set();
+      currentKeys = new Set();
+      render();
+    }
+
+    stepButton.addEventListener("click", processNextRecord);
+    runButton.addEventListener("click", () => {
+      if (timer !== null || cursor >= 8) return;
+      timer = setInterval(() => {
+        if (!processNextRecord()) stopRun();
+      }, 300);
+      render("Running the selected workload…");
+    });
+    resetButton.addEventListener("click", reset);
+    layoutInput.addEventListener("change", reset);
+    workloadInput.addEventListener("change", reset);
+    reset();
+  }
+
   function initialize() {
     document.querySelectorAll('[data-system-demo="memory-hierarchy"]')
       .forEach(initializeMemoryHierarchy);
+    document.querySelectorAll('[data-system-demo="data-layout"]')
+      .forEach(initializeDataLayout);
   }
 
   if (document.readyState === "loading") {
