@@ -32,8 +32,8 @@
   white-space: nowrap;
 }
 
-/* mdBook injects every heading from the current page into the book sidebar.
-   These chapters are intentionally long, so keep that sidebar chapter-focused. */
-#mdbook-sidebar ol.section {
+/* Keep section chapters in the sidebar, but omit the current page's heading
+   outline. Long chapters already provide their own in-page reading structure. */
+#mdbook-sidebar ol.section ol.section {
   display: none;
 }
