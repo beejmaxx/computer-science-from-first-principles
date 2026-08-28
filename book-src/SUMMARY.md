@@ -4,31 +4,31 @@
 
 # Collections
 
-- [`VecDeque` — A Double-Ended Queue](vecdeque.md)
-- [`LinkedList` — A Doubly Linked List](linked-list.md)
-- [`BinaryHeap` — A Priority Queue](binary-heap.md)
-- [`Vec` — A Growable Array](vec.md)
-- [`HashMap` — Key-Value Lookup](hash-map.md)
-- [`BTreeMap` — An Ordered Map](btree-map.md)
-- [`HashSet` — Membership and Uniqueness](hash-set.md)
+- [`VecDeque`](vecdeque.md)
+- [`LinkedList`](linked-list.md)
+- [`BinaryHeap`](binary-heap.md)
+- [`Vec`](vec.md)
+- [`HashMap`](hash-map.md)
+- [`BTreeMap`](btree-map.md)
+- [`HashSet`](hash-set.md)
 
 # Storage and identity
 
-- [Slabs and Arenas — Stable Handles](slabs-and-arenas.md)
-- [`BTreeSet` — Ordered Membership](btree-set.md)
+- [Slabs and Arenas](slabs-and-arenas.md)
+- [`BTreeSet`](btree-set.md)
 
 # Algorithmic structures
 
-- [Graphs — Choosing a Representation](graphs.md)
-- [Disjoint Set — Dynamic Connectivity](disjoint-set.md)
-- [Tries — Prefix Lookup](tries.md)
-- [Bit Sets — Dense Membership](bit-sets.md)
-- [Bloom Filters — Probabilistic Membership](bloom-filters.md)
-- [LRU Cache — Lookup Plus Recency](lru-cache.md)
-- [Monotonic Deque — Rolling Extremes](monotonic-deque.md)
-- [Ring Buffer — Fixed-Capacity Streaming](ring-buffer.md)
-- [Indexed Priority Queue — Mutable Priorities](indexed-priority-queue.md)
-- [Interval Structures — Overlap and Range Queries](interval-structures.md)
+- [Graphs](graphs.md)
+- [Disjoint Set](disjoint-set.md)
+- [Tries](tries.md)
+- [Bit Sets](bit-sets.md)
+- [Bloom Filters](bloom-filters.md)
+- [LRU Cache](lru-cache.md)
+- [Monotonic Deque](monotonic-deque.md)
+- [Ring Buffer](ring-buffer.md)
+- [Indexed Priority Queue](indexed-priority-queue.md)
+- [Interval Structures](interval-structures.md)
 
 # Choosing
 
