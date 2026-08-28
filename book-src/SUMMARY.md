@@ -63,6 +63,7 @@
   - [Coherence and False Sharing](concurrency/cache-coherence.md)
   - [Queues and Backpressure](concurrency/bounded-queues.md)
   - [Lock-Free SPSC Rings](concurrency/spsc-ring.md)
+  - [LMAX Disruptor](concurrency/lmax-disruptor.md)
   - [Multi-Producer Contention](concurrency/multi-producer.md)
   - [Memory Reclamation](concurrency/reclamation.md)
   - [Async Versus Threads](concurrency/async-vs-threads.md)

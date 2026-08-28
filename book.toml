@@ -1,7 +1,7 @@
 [book]
 title = "Computer Science from First Principles"
 authors = ["Bijan"]
-description = "Interactive foundations for high-performance, low-latency systems, with practical Rust implementations."
+description = "Interactive foundations for high-performance, low-latency systems, with practical Rust and modern C++ implementations."
 language = "en"
 src = "book-src"
 
@@ -15,8 +15,8 @@ edition = "2024"
 default-theme = "light"
 preferred-dark-theme = "navy"
 no-section-label = true
-additional-css = ["theme/toolbox.css", "theme/vecdeque-ring-buffer.css", "theme/structure-demos.css", "theme/algorithm-demos.css", "theme/system-demos.css"]
-additional-js = ["theme/vecdeque-ring-buffer.js", "theme/structure-demos.js", "theme/algorithm-demos.js", "theme/system-demos.js"]
+additional-css = ["theme/toolbox.css", "theme/vecdeque-ring-buffer.css", "theme/structure-demos.css", "theme/algorithm-demos.css", "theme/system-demos.css", "theme/disruptor-demo.css"]
+additional-js = ["theme/vecdeque-ring-buffer.js", "theme/structure-demos.js", "theme/algorithm-demos.js", "theme/system-demos.js", "theme/disruptor-demo.js"]
 git-repository-url = "https://github.com/beejmaxx/computer-science-from-first-principles"
 edit-url-template = "https://github.com/beejmaxx/computer-science-from-first-principles/edit/main/{path}"
 site-url = "/computer-science-from-first-principles/"

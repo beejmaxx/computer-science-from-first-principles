@@ -19,6 +19,35 @@ Pin the version or commit used in an experiment. Record the CPU, kernel, compile
 flags, NIC, driver, firmware, topology, power policy, and relevant operating-system
 configuration. “Faster” without that context is not a reusable finding.
 
+## If you are buying books
+
+The strongest first purchases for this curriculum are:
+
+1. [*Systems Performance*, second edition](https://www.brendangregg.com/systems-performance-2nd-edition-book.html),
+   for a disciplined whole-system method.
+2. [*Understanding Software Dynamics*](https://www.informit.com/store/understanding-software-dynamics-9780137589838),
+   for explaining intermittent delay, queues, waiting, and long-tail latency with
+   low-overhead tracing.
+3. [*The Art of Writing Efficient Programs*](https://www.packtpub.com/en-us/product/the-art-of-writing-efficient-programs-9781800208117),
+   for hardware-aware measurement and optimization through C++ experiments.
+
+Then buy according to the layer you are actively studying:
+
+- C++ concurrency: [*C++ Concurrency in Action*, second edition](https://www.manning.com/books/c-plus-plus-concurrency-in-action-second-edition).
+- Linux APIs: [*The Linux Programming Interface*](https://man7.org/tlpi/).
+- Production observability: [*BPF Performance Tools*](https://www.brendangregg.com/bpf-performance-tools-book.html).
+- Deep processor architecture: [*Computer Architecture: A Quantitative Approach*, seventh edition](https://www.educate.elsevier.com/book/details/9780443154065).
+
+Two books are unusually direct about low-latency trading systems:
+
+- [*Building Low Latency Applications with C++*](https://www.oreilly.com/library/view/building-low-latency/9781837639359/)
+- [*Developing High-Frequency Trading Systems*](https://www.packtpub.com/en-CL/product/developing-high-frequency-trading-systems-9781803242811)
+
+Use those as architecture tours and implementation prompts, not as the final
+authority for processor behavior, Linux APIs, venue semantics, or benchmark
+claims. They connect the layers conveniently; the specialist books and current
+official documentation establish the details.
+
 ## A deliberate reading order
 
 ### 1. Learn the modern CPU cost model

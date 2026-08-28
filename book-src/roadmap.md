@@ -79,6 +79,7 @@ start and end timestamps of an otherwise small operation.
 - [False sharing and cache coherence](concurrency/cache-coherence.md)
 - [Bounded queues and backpressure](concurrency/bounded-queues.md)
 - [Lock-free single-producer/single-consumer rings](concurrency/spsc-ring.md)
+- [The LMAX Disruptor and sequence-gated pipelines](concurrency/lmax-disruptor.md)
 - [Multi-producer algorithms and contention](concurrency/multi-producer.md)
 - [Read-copy-update, epochs, and reclamation](concurrency/reclamation.md)
 - [Async runtimes versus dedicated threads](concurrency/async-vs-threads.md)
