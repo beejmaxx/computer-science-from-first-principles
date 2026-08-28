@@ -8,9 +8,14 @@ This is not a survey of every computer-science topic. Material earns a place
 when it helps explain, construct, or measure high-performance systems. HFT is a
 later application of those foundations, not required context for learning them.
 
-Rust is the implementation language, not the prerequisite being taught. Each
-topic starts with a language-independent model and uses Rust to make ownership,
-memory, concurrency, and cost concrete.
+The concepts are language-independent. Rust is the primary reference language
+because it makes ownership, memory, and concurrency decisions visible. Modern
+C++ is a first-class implementation track where its object model, allocators,
+atomics, compiler toolchain, and low-latency ecosystem teach something distinct.
+
+The book will not mechanically translate every listing. An experiment appears
+in both languages when the comparison exposes a real tradeoff: layout, lifetime,
+allocation, abstraction cost, synchronization, generated code, or tooling.
 
 ## Part I — Data structures
 
@@ -109,6 +114,19 @@ including where copies, queues, interrupts, and scheduling enter that path.
 Averages are rarely enough. This part teaches how to produce measurements that
 remain meaningful when the system is busy or occasionally slow.
 
+## Applied track — High-performance C++
+
+- [Cost models, value categories, RAII, and object lifetime](cpp/cost-model-lifetime.md)
+- [Object layout, containers, iterators, and invalidation](cpp/layout-containers.md)
+- [Allocation, `std::pmr`, arenas, and object pools](cpp/allocation-pmr-pools.md)
+- [Templates, inlining, generated code, and instruction-cache cost](cpp/templates-inlining-code-size.md)
+- [Atomics and the C++ memory model](cpp/atomics-memory-model.md)
+- [Build modes, sanitizers, compiler inspection, and benchmarking](cpp/toolchains-sanitizers-benchmarking.md)
+
+This is an applied track, not a second introductory programming course. It uses
+the machine, operating-system, concurrency, and measurement models established
+above to explain how high-performance C++ actually behaves.
+
 ## Part VIII — Storage and database internals
 
 - [Pages, B-trees, log-structured storage, and write-ahead logs](storage/storage-engines.md)
@@ -140,5 +158,5 @@ collection of unexplained low-latency tricks.
 
 A topic graduates into the book only when it has a concrete motivating problem,
 an interactive model where motion clarifies the idea, a predictive invariant,
-a straightforward Rust implementation, honest alternatives, sharp edges, and a
-focused exercise.
+a straightforward reference implementation, honest alternatives, sharp edges,
+and a focused exercise.

@@ -2,6 +2,7 @@
 
 [Introduction](README.md)
 [Curriculum](roadmap.md)
+[Performance Systems Reading Map](performance-systems-reading-map.md)
 
 - [Data Structures](parts/data-structures.md)
   - [`VecDeque`](vecdeque.md)
@@ -85,6 +86,14 @@
   - [Jitter Budgets](performance/jitter-budgets.md)
   - [Load and Replay](performance/load-replay.md)
   - [Overload](performance/overload.md)
+
+- [High-Performance C++](parts/high-performance-cpp.md)
+  - [Cost Model and Object Lifetime](cpp/cost-model-lifetime.md)
+  - [Layout, Containers, and Invalidation](cpp/layout-containers.md)
+  - [Allocation, `pmr`, and Pools](cpp/allocation-pmr-pools.md)
+  - [Templates, Inlining, and Code Size](cpp/templates-inlining-code-size.md)
+  - [C++ Atomics and Memory Ordering](cpp/atomics-memory-model.md)
+  - [Toolchains, Sanitizers, and Benchmarking](cpp/toolchains-sanitizers-benchmarking.md)
 
 - [Storage Internals](parts/storage-internals.md)
   - [Storage Engines](storage/storage-engines.md)

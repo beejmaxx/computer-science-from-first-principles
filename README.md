@@ -1,14 +1,14 @@
 # Computer Science from First Principles
 
 Interactive foundations for high-performance, low-latency systems, with
-practical Rust implementations.
+practical Rust and modern C++ implementations.
 
 **Status:** In development. The data-structures part reached version 1.0.
 
 The book builds from data structures and algorithms into the machine, operating
 system, concurrency, networking, performance, storage, and market-system ideas
 needed to reason about low-latency software. Chapters emphasize interactive
-models, predictive invariants, honest costs, and straightforward Rust.
+models, predictive invariants, honest costs, and measured implementations.
 
 Read it online at
 **https://beejmaxx.github.io/computer-science-from-first-principles/**.
