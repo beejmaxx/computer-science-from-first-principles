@@ -172,3 +172,9 @@ heap with `into_sorted_vec`, when sorted output is required.
 3. Only the root is guaranteed to be the current extreme.
 4. Push and pop repair a partial tree ordering in `O(log n)`.
 5. Use a sequence number when equal priorities must remain FIFO.
+
+## Exercise
+
+Build a task queue whose larger priority runs first while equal priorities run
+in insertion order. Push five tasks, including three with the same priority,
+and assert the complete pop order.

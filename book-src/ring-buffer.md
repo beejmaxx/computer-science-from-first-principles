@@ -3,12 +3,14 @@
 A fixed-capacity ring buffer reuses a bounded allocation by wrapping its read
 and write positions around the end.
 
+<div class="ds-demo" data-demo="ring"></div>
+
 ## When to use it
 
 Use one for bounded histories, audio or network buffers, telemetry, and
 producer/consumer pipelines where allocation after initialization is unwanted.
 
-<div class="ds-demo" data-demo="ring"></div>
+Use `VecDeque` when the collection should grow rather than enforce a capacity.
 
 ## 1. Overwriting implementation
 
@@ -76,3 +78,9 @@ does not make a queue thread-safe.
 
 Ring buffers trade growth for predictable capacity. Define what full and empty
 mean, what happens on overflow, and who owns each slot.
+
+## Exercise
+
+Change the example's overwrite policy into a reject-new-value policy. Make the
+return type distinguish a full buffer from an accepted value, and test the
+wraparound boundary.

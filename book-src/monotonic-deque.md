@@ -3,12 +3,15 @@
 A monotonic deque keeps candidates ordered so the minimum or maximum of every
 sliding window can be produced in linear time.
 
+<div class="ds-demo" data-demo="monotonic"></div>
+
 ## When to use it
 
 Use it for rolling highs and lows, streaming thresholds, windowed telemetry,
 and algorithms that repeatedly need an extreme over adjacent ranges.
 
-<div class="ds-demo" data-demo="monotonic"></div>
+Use a heap or range-query structure when windows are not contiguous or do not
+advance in one direction.
 
 ## 1. Invariant
 
@@ -53,3 +56,8 @@ Each index enters once and leaves once, so total work is `O(n)` rather than
 
 The deque contains only values that can still become the answer. Its ordering
 invariant converts repeated window scans into amortized constant work per item.
+
+## Exercise
+
+Adapt `rolling_max` into `rolling_min`, then test both functions on increasing,
+decreasing, constant, and duplicate-heavy inputs.

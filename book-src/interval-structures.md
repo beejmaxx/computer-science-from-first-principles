@@ -3,12 +3,15 @@
 An interval represents a range such as `[start, end)`. Interval problems ask
 which ranges overlap a point or another range, or how ranges can be merged.
 
+<div class="ds-demo" data-demo="intervals"></div>
+
 ## When to use them
 
 Use interval structures for schedules, reservations, time windows, memory
 ranges, genomic regions, and price validity periods.
 
-<div class="ds-demo" data-demo="intervals"></div>
+Start with a sorted `Vec`; add an augmented tree only when frequent dynamic
+overlap queries justify the additional invariants.
 
 ## 1. The overlap rule
 
@@ -31,7 +34,7 @@ fn merge(mut intervals: Vec<(i32, i32)>) -> Vec<(i32, i32)> {
     for (start, end) in intervals {
         assert!(start <= end);
         match merged.last_mut() {
-            Some(last) if start <= last.1 => last.1 = last.1.max(end),
+            Some(last) if start < last.1 => last.1 = last.1.max(end),
             _ => merged.push((start, end)),
         }
     }
@@ -69,3 +72,9 @@ overlap. Many interval bugs are contract bugs, not tree bugs.
 
 Start with sorted intervals and binary search. Reach for an augmented tree only
 when dynamic overlap queries justify its invariants and memory cost.
+
+## Exercise
+
+Test the merge function with empty intervals, nested intervals, and the
+half-open neighbors `[1, 3)` and `[3, 5)`. Decide explicitly whether touching
+ranges should remain separate, then make the implementation match that rule.

@@ -3,13 +3,13 @@
 A trie stores keys one symbol at a time. Keys with a common prefix share the
 same path.
 
+<div class="ds-demo" data-demo="trie"></div>
+
 ## When to use a trie
 
 Use one for prefix search, autocomplete, routing tables, dictionaries, and
 longest-prefix matching. Use a hash map when only complete-key lookup matters;
 tries often consume substantially more memory.
-
-<div class="ds-demo" data-demo="trie"></div>
 
 ## 1. Mental model
 
@@ -91,3 +91,8 @@ stored keys. The constant cost depends heavily on child representation.
 
 Tries exchange memory for prefix-oriented operations. The alphabet and child
 representation usually matter more than the high-level algorithm.
+
+## Exercise
+
+Add `words_with_prefix(prefix)` and return results in deterministic order.
+Test a prefix that is itself a stored word as well as a prefix with no matches.

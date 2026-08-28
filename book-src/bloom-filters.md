@@ -3,13 +3,13 @@
 A Bloom filter is a compact probabilistic set. It can prove that a value is
 definitely absent or report that it is possibly present.
 
+<div class="ds-demo" data-demo="bloom"></div>
+
 ## When to use it
 
 Use a Bloom filter to avoid expensive negative lookups—for example, before disk,
 network, or database access. Do not use it when false positives are unacceptable
 or when stored values must be retrieved.
-
-<div class="ds-demo" data-demo="bloom"></div>
 
 > “Not present” is definitive; “possibly present” requires confirmation.
 
@@ -101,3 +101,9 @@ Measure the realized rate with representative data.
 
 A Bloom filter is a fast negative filter, not a source of truth. It trades a
 controlled false-positive rate for compact storage and cheap membership tests.
+
+## Exercise
+
+Insert 1,000 values, test 10,000 different values, and measure the observed
+false-positive rate. Repeat with twice as many bits while keeping the number of
+hashes fixed.

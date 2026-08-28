@@ -3,13 +3,13 @@
 An LRU cache evicts the **least recently used** entry when capacity is full. It
 combines keyed lookup with an ordering that changes on every hit.
 
+<div class="ds-demo" data-demo="lru"></div>
+
 ## When to use it
 
 Use LRU when recent access predicts future access and storage is bounded. Avoid
 it when entries have explicit expiration, frequency matters more than recency,
 or every read becoming a metadata write creates too much contention.
-
-<div class="ds-demo" data-demo="lru"></div>
 
 ## 1. Two structures, two questions
 
@@ -86,3 +86,9 @@ without searching.
 
 LRU is a composition, not one container. “Best” depends on capacity, contention,
 memory bounds, and whether strict recency is actually required.
+
+## Exercise
+
+Trace a capacity-three cache through `A, B, C, A, D, C`. Record the recency
+order after each access, then update the example to count hits, misses, and
+evictions.

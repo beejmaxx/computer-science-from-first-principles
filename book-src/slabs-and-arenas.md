@@ -330,3 +330,9 @@ identity operations does the workload actually require?
    safely in Rust.
 7. The arena remains responsible for borrowing, lifetime, and generation
    invariants.
+
+## Exercise
+
+Insert a value, remove it, and reuse its slot. Prove with assertions that the
+old handle is rejected while the new handle resolves, even though both handles
+contain the same slot index.

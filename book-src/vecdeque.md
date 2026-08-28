@@ -10,6 +10,38 @@ Its defining property is:
 
 > It supports efficient insertion and removal at both the front and the back.
 
+Use the controls below. Watch how `head` moves while the logical order remains
+normal.
+
+<div id="vecdeque-ring-explainer">
+  <div class="vd-status" aria-live="polite">
+    <span><strong>head</strong> = <span data-head>6</span></span>
+    <span><strong>len</strong> = <span data-len>4</span></span>
+    <span><strong>capacity</strong> = 8</span>
+    <span><strong>tail-next</strong> = <span data-tail>2</span></span>
+  </div>
+  <div class="vd-stage">
+    <svg viewBox="0 0 560 360" role="img" aria-labelledby="vd-title vd-desc">
+      <title id="vd-title">VecDeque circular buffer simulator</title>
+      <desc id="vd-desc">Eight physical slots arranged in a ring. Filled slots hold the deque in logical front-to-back order, beginning at head.</desc>
+      <g data-ring></g>
+      <text x="280" y="166" class="vd-center-label">logical front</text>
+      <text x="280" y="190" class="vd-value" data-front>10</text>
+      <text x="280" y="218" class="vd-center-label">front → back</text>
+    </svg>
+  </div>
+  <div class="vd-logical" data-logical aria-live="polite">[10, 20, 30, 40]</div>
+  <div class="vd-controls" aria-label="Deque operations">
+    <button type="button" data-op="push_front">push_front</button>
+    <button type="button" data-op="pop_front">pop_front</button>
+    <button type="button" data-op="push_back">push_back</button>
+    <button type="button" data-op="pop_back">pop_back</button>
+    <button class="secondary" type="button" data-op="reset">Reset</button>
+  </div>
+  <div class="vd-event" data-event aria-live="polite">Initial state wraps from slot 7 to slot 0.</div>
+  <noscript>The interactive controls require JavaScript.</noscript>
+</div>
+
 ## When to use `VecDeque`
 
 Use `VecDeque` when values remain in an ordered sequence and operations at the
@@ -43,38 +75,6 @@ Choose another structure when the access pattern is different:
   one another.
 - Consider another representation when arbitrary searches, insertions, or
   removals from the middle dominate the workload.
-
-Use the controls below. Watch how `head` moves while the logical order remains
-normal.
-
-<div id="vecdeque-ring-explainer">
-  <div class="vd-status" aria-live="polite">
-    <span><strong>head</strong> = <span data-head>6</span></span>
-    <span><strong>len</strong> = <span data-len>4</span></span>
-    <span><strong>capacity</strong> = 8</span>
-    <span><strong>tail-next</strong> = <span data-tail>2</span></span>
-  </div>
-  <div class="vd-stage">
-    <svg viewBox="0 0 560 360" role="img" aria-labelledby="vd-title vd-desc">
-      <title id="vd-title">VecDeque circular buffer simulator</title>
-      <desc id="vd-desc">Eight physical slots arranged in a ring. Filled slots hold the deque in logical front-to-back order, beginning at head.</desc>
-      <g data-ring></g>
-      <text x="280" y="166" class="vd-center-label">logical front</text>
-      <text x="280" y="190" class="vd-value" data-front>10</text>
-      <text x="280" y="218" class="vd-center-label">front → back</text>
-    </svg>
-  </div>
-  <div class="vd-logical" data-logical aria-live="polite">[10, 20, 30, 40]</div>
-  <div class="vd-controls" aria-label="Deque operations">
-    <button type="button" data-op="push_front">push_front</button>
-    <button type="button" data-op="pop_front">pop_front</button>
-    <button type="button" data-op="push_back">push_back</button>
-    <button type="button" data-op="pop_back">pop_back</button>
-    <button class="secondary" type="button" data-op="reset">Reset</button>
-  </div>
-  <div class="vd-event" data-event aria-live="polite">Initial state wraps from slot 7 to slot 0.</div>
-  <noscript>The interactive controls require JavaScript.</noscript>
-</div>
 
 ## 1. The essential mental model
 
@@ -742,6 +742,8 @@ The durable model is:
 8. It is ideal for FIFO queues, BFS, worklists, and rolling windows.
 9. It does not solve strict `O(1)` LRU recency updates.
 
-A useful test: with capacity `8`, `head = 6`, and `len = 4`, determine the
-physical slot used by `push_back`, then by `push_front`. If you can calculate
-both without guessing, you understand the core mechanism.
+## Exercise
+
+With capacity `8`, `head = 6`, and `len = 4`, determine the physical slot used
+by `push_back`, then by `push_front`. Draw the physical buffer after both
+operations and write the resulting logical order.

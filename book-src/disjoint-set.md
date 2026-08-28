@@ -3,13 +3,13 @@
 A disjoint-set union structure—also called **union-find**—maintains a partition
 of elements into non-overlapping groups.
 
+<div class="ds-demo" data-demo="union-find"></div>
+
 ## When to use it
 
 Use union-find when edges are added and you repeatedly ask whether two elements
 are connected. It appears in Kruskal's minimum spanning tree, clustering,
 network connectivity, and cycle detection in undirected graphs.
-
-<div class="ds-demo" data-demo="union-find"></div>
 
 It does not support efficient arbitrary edge deletion or shortest paths.
 
@@ -98,3 +98,8 @@ Union-find answers connectivity, not the actual path connecting two elements.
 Union-find is specialized and exceptionally efficient: it maintains connected
 components under additions. Path compression speeds future queries; union by
 size prevents tall trees.
+
+## Exercise
+
+Extend the implementation with `component_size(x)` and a count of current
+components. Verify that redundant unions change neither result.

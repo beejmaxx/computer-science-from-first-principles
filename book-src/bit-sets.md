@@ -2,13 +2,13 @@
 
 A bit set represents membership with one bit per possible integer value.
 
+<div class="ds-demo" data-demo="bit-set"></div>
+
 ## When to use it
 
 Use a bit set when the universe is bounded and densely numbered: permissions,
 CPU sets, feature flags, graph visitation, instrument IDs, or compact set
 algebra. Use `HashSet` for sparse or non-integer keys.
-
-<div class="ds-demo" data-demo="bit-set"></div>
 
 ## 1. Representation
 
@@ -90,3 +90,8 @@ declared capacity but safely returns `false` for an out-of-range lookup.
 
 Bit sets are arrays of membership bits. They provide compact dense membership
 and extremely fast bulk set operations, but require a bounded integer domain.
+
+## Exercise
+
+Add `union`, `difference`, and `count` operations to the example. Test values on
+both sides of a word boundary, such as `63`, `64`, and `65`.

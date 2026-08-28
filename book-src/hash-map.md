@@ -154,3 +154,8 @@ that explicitly guarantees it.
 3. Lookup is expected `O(1)`, not ordered.
 4. `entry` is the central tool for update-or-insert logic.
 5. Choose `BTreeMap` when order and ranges are requirements.
+
+## Exercise
+
+Build a frequency map for a stream of instrument IDs using `entry`. Then
+produce deterministic output without changing the map type.

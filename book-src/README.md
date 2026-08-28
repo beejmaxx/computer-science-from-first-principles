@@ -2,6 +2,8 @@
 
 <p class="chapter-subtitle">An interactive guide from first principles.</p>
 
+<p class="chapter-meta"><span><strong>Version</strong> 1.0</span><span><strong>Status</strong> Foundational guide complete</span></p>
+
 Data structures are choices about what must be fast, what may be slower, and
 how values should be arranged in memory.
 

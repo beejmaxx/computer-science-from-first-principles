@@ -262,3 +262,9 @@ results, even though Rust's memory safety remains intact.
 4. Ordering defines both traversal and uniqueness.
 5. `HashSet` is the default when order is irrelevant.
 6. A sorted `Vec` can be better when updates are rare.
+
+## Exercise
+
+Store a set of timestamps, then implement queries for the nearest timestamp at
+or before a target and the nearest timestamp at or after it. Include targets
+below and above every stored value.

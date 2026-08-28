@@ -2,6 +2,8 @@
 
 An interactive guide to data structures from first principles.
 
+**Status:** Version 1.0
+
 The book assumes you can read ordinary Rust. It focuses on how each structure
 works, when to use it, where it surprises people, and what to choose instead
 when it is the wrong fit. Chapters stand alone and can be read in any order.

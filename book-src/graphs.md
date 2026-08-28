@@ -3,12 +3,12 @@
 A graph contains **vertices** connected by **edges**. The representation is not
 an implementation detail: it determines which graph operations are cheap.
 
+<div class="ds-demo" data-demo="graph"></div>
+
 ## When to use a graph
 
 Use a graph for networks, dependencies, routes, state transitions, ownership
 relationships, or any domain where arbitrary entities connect to one another.
-
-<div class="ds-demo" data-demo="graph"></div>
 
 > Choose the representation from the queries: neighbor traversal, edge lookup,
 > global edge processing, or dense connectivity.
@@ -79,3 +79,8 @@ prevent an old edge from silently pointing to a new occupant.
 Graphs have no single best storage type. Start with an adjacency list for sparse
 graphs, then change representation only when edge lookup, density, identity, or
 mutation demands it.
+
+## Exercise
+
+Modify the BFS example to return the shortest path from `start` to a target,
+not merely visitation order. Return `None` when the target is unreachable.

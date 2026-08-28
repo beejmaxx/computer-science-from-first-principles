@@ -4,12 +4,14 @@ An indexed priority queue combines a heap with a map from item identity to heap
 position. It supports changing or removing an arbitrary item's priority without
 scanning the entire heap.
 
+<div class="ds-demo" data-demo="indexed-heap"></div>
+
 ## When to use it
 
 Use it for schedulers with cancellation, Dijkstra variants with decrease-key,
 order queues with priority updates, and simulations whose future events change.
 
-<div class="ds-demo" data-demo="indexed-heap"></div>
+Use an ordinary `BinaryHeap` when priorities never change after insertion.
 
 ## 1. Invariant
 
@@ -93,3 +95,8 @@ map/heap synchronization invariant is the structure's main source of bugs.
 An ordinary heap exposes only its root. Adding an index map makes arbitrary
 items addressable, but every structural change must maintain two coordinated
 representations.
+
+## Exercise
+
+Implement removal by key. After every swap and removal, assert that each heap
+entry's index agrees with `positions` and that the heap-order invariant holds.

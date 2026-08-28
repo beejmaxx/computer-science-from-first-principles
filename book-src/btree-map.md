@@ -142,3 +142,9 @@ requirement more accurately.
 3. Range queries and ordered traversal are its central strengths.
 4. It requires `Ord`, while `HashMap` requires `Eq + Hash`.
 5. Choose it when ordering is part of the problem.
+
+## Exercise
+
+Represent price levels as `BTreeMap<i64, u64>`. Find the best ask, best bid,
+and every level within five ticks of a supplied price without scanning the
+entire map.

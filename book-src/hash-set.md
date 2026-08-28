@@ -152,3 +152,8 @@ logic more directly than nested membership checks.
 3. `insert` conveniently reports whether a value was new.
 4. Set operations express comparisons between groups.
 5. Use `BTreeSet` when sorted traversal or ranges matter.
+
+## Exercise
+
+Given yesterday's and today's active symbol sets, compute added, removed, and
+unchanged symbols. Assert the three groups for a small example.

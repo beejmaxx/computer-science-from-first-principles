@@ -161,3 +161,8 @@ keeps values matching a predicate.
 4. Middle and front changes shift elements.
 5. Slices expose borrowed contiguous views.
 6. `Vec` is the default ordered collection and the standard stack.
+
+## Exercise
+
+Implement a stack with `Vec` using only `push`, `pop`, and `last`. Then remove
+values repeatedly from index zero and explain why the total work is quadratic.

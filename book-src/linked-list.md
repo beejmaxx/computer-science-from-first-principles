@@ -320,3 +320,9 @@ The durable model is:
 8. `VecDeque` is normally the better queue.
 9. `LinkedList` earns its place when linked-list-specific operations or
    measurements justify it.
+
+## Exercise
+
+Create two lists, keep references to their first values, append the second list
+to the first, and confirm the resulting order. Then write the equivalent using
+`VecDeque` and compare which operations each version expresses naturally.
