@@ -1,4 +1,4 @@
-# 3. `BinaryHeap` — A Priority Queue
+# `BinaryHeap` — A Priority Queue
 
 A priority queue stores values according to importance rather than arrival
 order. Rust's `BinaryHeap<T>` is a max-heap: `peek` and `pop` expose the greatest

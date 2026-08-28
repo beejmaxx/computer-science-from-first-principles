@@ -1,4 +1,4 @@
-# 17. Ring Buffer — Fixed-Capacity Streaming
+# Ring Buffer — Fixed-Capacity Streaming
 
 A fixed-capacity ring buffer reuses a bounded allocation by wrapping its read
 and write positions around the end.

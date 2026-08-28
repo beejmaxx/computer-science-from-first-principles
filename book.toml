@@ -14,8 +14,9 @@ edition = "2024"
 [output.html]
 default-theme = "light"
 preferred-dark-theme = "navy"
-additional-css = ["theme/toolbox.css", "theme/vecdeque-ring-buffer.css", "theme/structure-demos.css", "theme/algorithm-demos.css"]
-additional-js = ["theme/vecdeque-ring-buffer.js", "theme/structure-demos.js", "theme/algorithm-demos.js"]
+no-section-label = true
+additional-css = ["theme/toolbox.css", "theme/vecdeque-ring-buffer.css", "theme/structure-demos.css", "theme/algorithm-demos.css", "theme/system-demos.css"]
+additional-js = ["theme/vecdeque-ring-buffer.js", "theme/structure-demos.js", "theme/algorithm-demos.js", "theme/system-demos.js"]
 git-repository-url = "https://github.com/beejmaxx/computer-science-from-first-principles"
 edit-url-template = "https://github.com/beejmaxx/computer-science-from-first-principles/edit/main/{path}"
 site-url = "/computer-science-from-first-principles/"

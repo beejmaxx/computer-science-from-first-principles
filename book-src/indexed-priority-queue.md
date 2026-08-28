@@ -1,4 +1,4 @@
-# 18. Indexed Priority Queue — Mutable Priorities
+# Indexed Priority Queue — Mutable Priorities
 
 An indexed priority queue combines a heap with a map from item identity to heap
 position. It supports changing or removing an arbitrary item's priority without

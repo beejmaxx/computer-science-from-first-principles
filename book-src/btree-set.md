@@ -1,4 +1,4 @@
-# 9. `BTreeSet` — Ordered Membership
+# `BTreeSet` — Ordered Membership
 
 `BTreeSet<T>` stores unique values in sorted order. It answers membership
 questions like a `HashSet`, while also supporting ordered traversal, range

@@ -1,4 +1,4 @@
-# 10. Graphs — Choosing a Representation
+# Graphs — Choosing a Representation
 
 A graph contains **vertices** connected by **edges**. The representation is not
 an implementation detail: it determines which graph operations are cheap.

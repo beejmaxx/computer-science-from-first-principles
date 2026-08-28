@@ -1,4 +1,4 @@
-# 12. Tries — Prefix Lookup
+# Tries — Prefix Lookup
 
 A trie stores keys one symbol at a time. Keys with a common prefix share the
 same path.

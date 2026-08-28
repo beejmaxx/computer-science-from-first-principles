@@ -4,6 +4,10 @@ The destination is the ability to reason about a complete low-latency system:
 from the shape of an algorithm, through cache lines and scheduler behavior, to
 packets, latency distributions, risk checks, and production failure modes.
 
+This is not a survey of every computer-science topic. Material earns a place
+when it helps explain, construct, or measure high-performance systems. HFT is a
+later application of those foundations, not required context for learning them.
+
 Rust is the implementation language, not the prerequisite being taught. Each
 topic starts with a language-independent model and uses Rust to make ownership,
 memory, concurrency, and cost concrete.
@@ -17,26 +21,24 @@ membership, rolling windows, fixed-capacity buffers, and choosing among them.
 
 These chapters establish the vocabulary used throughout the rest of the book.
 
-## Part II — Algorithms
+## Part II — Essential algorithms
 
 **Status: in progress.**
 
 - Binary search and boundary finding
 - Sorting, selection, and top-k problems
-- Two pointers and sliding windows
-- Prefix sums and difference arrays
-- BFS, DFS, shortest paths, and topological ordering
-- Greedy algorithms and scheduling
-- Divide and conquer
-- Dynamic programming
-- Backtracking and state-space search
-- String matching and parsing
-- Range-query algorithms
+- Linear scans, two pointers, and sliding windows
+- Prefix aggregates and incremental computation
+- BFS, shortest paths, and dependency ordering where systems need them
+- Greedy scheduling and queueing decisions
+- Streaming and online algorithms
+- Parsing and state machines for data feeds and protocols
 
-The goal is not to memorize solutions. It is to identify invariants, prove that
-progress occurs, and connect asymptotic analysis with actual memory access.
+The goal is not broad interview-problem coverage. It is to identify invariants,
+prove that progress occurs, and connect asymptotic analysis with actual memory
+access and data movement.
 
-## Part III — The machine model
+## Part III — The machine
 
 - Integer and floating-point representation
 - Virtual memory, pages, and translation lookaside buffers
@@ -78,7 +80,7 @@ start and end timestamps of an otherwise small operation.
 Correctness comes first; predictability and throughput follow from measuring
 the resulting contention and coordination.
 
-## Part VI — Networking
+## Part VI — Networking and I/O
 
 - Ethernet, IP, UDP, TCP, and multicast
 - Socket buffers, batching, and packet timestamps
@@ -92,7 +94,7 @@ the resulting contention and coordination.
 The emphasis is the complete path from a byte on the wire to application state,
 including where copies, queues, interrupts, and scheduling enter that path.
 
-## Part VII — Performance engineering
+## Part VII — Latency measurement and performance engineering
 
 - Throughput versus latency
 - Latency distributions, percentiles, and tail behavior

@@ -1,4 +1,4 @@
-# 16. Monotonic Deque — Rolling Extremes
+# Monotonic Deque — Rolling Extremes
 
 A monotonic deque keeps candidates ordered so the minimum or maximum of every
 sliding window can be produced in linear time.

@@ -1,4 +1,4 @@
-# 11. Disjoint Set — Dynamic Connectivity
+# Disjoint Set — Dynamic Connectivity
 
 A disjoint-set union structure—also called **union-find**—maintains a partition
 of elements into non-overlapping groups.

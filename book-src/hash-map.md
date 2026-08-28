@@ -1,4 +1,4 @@
-# 5. `HashMap` — Key-Value Lookup
+# `HashMap` — Key-Value Lookup
 
 `HashMap<K, V>` associates unique keys with values. It uses a key's hash to
 locate the region where that key should be stored.

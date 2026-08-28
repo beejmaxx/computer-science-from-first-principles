@@ -1,4 +1,4 @@
-# 14. Bloom Filters — Probabilistic Membership
+# Bloom Filters — Probabilistic Membership
 
 A Bloom filter is a compact probabilistic set. It can prove that a value is
 definitely absent or report that it is possibly present.

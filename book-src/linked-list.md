@@ -1,4 +1,4 @@
-# 2. `LinkedList` — A Doubly Linked List
+# `LinkedList` — A Doubly Linked List
 
 A linked list is a linear data structure whose elements live in separate
 nodes. Pointers connect each node to the next node in the sequence. The list

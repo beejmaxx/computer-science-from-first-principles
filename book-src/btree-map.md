@@ -1,4 +1,4 @@
-# 6. `BTreeMap` — An Ordered Map
+# `BTreeMap` — An Ordered Map
 
 `BTreeMap<K, V>` associates unique keys with values while keeping the keys in
 sorted order. It is implemented as a balanced search tree with nodes containing

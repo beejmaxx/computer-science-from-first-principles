@@ -1,4 +1,4 @@
-# 21. Binary Search — Finding the Boundary
+# Binary Search — Finding the Boundary
 
 Binary search repeatedly removes half of a sorted search space. Its durable
 form is not “look for the target”; it is “find the first position where a

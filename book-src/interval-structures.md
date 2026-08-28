@@ -1,4 +1,4 @@
-# 19. Interval Structures — Overlap and Range Queries
+# Interval Structures — Overlap and Range Queries
 
 An interval represents a range such as `[start, end)`. Interval problems ask
 which ranges overlap a point or another range, or how ranges can be merged.

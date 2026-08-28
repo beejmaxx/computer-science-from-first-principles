@@ -1,4 +1,4 @@
-# 7. `HashSet` — Membership and Uniqueness
+# `HashSet` — Membership and Uniqueness
 
 `HashSet<T>` stores unique values and answers whether a value is present. It is
 conceptually a `HashMap<T, ()>`: the keys matter, but there is no separate value

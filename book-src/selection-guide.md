@@ -1,4 +1,4 @@
-# 20. Data-Structure Selection Guide
+# Data-Structure Selection Guide
 
 Choose a data structure from the operation that must be cheap, not from its
 name or theoretical reputation.

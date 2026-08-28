@@ -3,7 +3,7 @@
 [Introduction](README.md)
 [Curriculum](roadmap.md)
 
-# Collections
+# Data Structures
 
 - [`VecDeque`](vecdeque.md)
 - [`LinkedList`](linked-list.md)
@@ -12,14 +12,8 @@
 - [`HashMap`](hash-map.md)
 - [`BTreeMap`](btree-map.md)
 - [`HashSet`](hash-set.md)
-
-# Storage and identity
-
 - [Slabs and Arenas](slabs-and-arenas.md)
 - [`BTreeSet`](btree-set.md)
-
-# Algorithmic structures
-
 - [Graphs](graphs.md)
 - [Disjoint Set](disjoint-set.md)
 - [Tries](tries.md)
@@ -30,11 +24,12 @@
 - [Ring Buffer](ring-buffer.md)
 - [Indexed Priority Queue](indexed-priority-queue.md)
 - [Interval Structures](interval-structures.md)
-
-# Choosing
-
 - [Data-Structure Selection Guide](selection-guide.md)
 
-# Algorithms
+# Essential Algorithms
 
 - [Binary Search](algorithms/binary-search.md)
+
+# The Machine
+
+- [Memory Hierarchy](systems/memory-hierarchy.md)

@@ -1,4 +1,4 @@
-# 13. Bit Sets — Dense Membership
+# Bit Sets — Dense Membership
 
 A bit set represents membership with one bit per possible integer value.
 

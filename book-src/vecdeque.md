@@ -1,4 +1,4 @@
-# 1. `VecDeque` — A Double-Ended Queue
+# `VecDeque` — A Double-Ended Queue
 
 A double-ended queue, often abbreviated to "deque" (pronounced "deck"), is an
 abstract data type that generalizes a queue, allowing elements to be added to

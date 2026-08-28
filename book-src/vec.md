@@ -1,4 +1,4 @@
-# 4. `Vec` — A Growable Array
+# `Vec` — A Growable Array
 
 `Vec<T>` stores values in a growable contiguous allocation. It is Rust's
 default general-purpose sequence and the collection to try first when values

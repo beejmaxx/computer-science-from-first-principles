@@ -1,4 +1,4 @@
-# 8. Slabs and Arenas — Stable Handles
+# Slabs and Arenas — Stable Handles
 
 Slabs and arenas store many values in one managed region and identify them with
 small handles. They are useful when values refer to one another, must be found

@@ -1,4 +1,4 @@
-# 15. LRU Cache — Lookup Plus Recency
+# LRU Cache — Lookup Plus Recency
 
 An LRU cache evicts the **least recently used** entry when capacity is full. It
 combines keyed lookup with an ordering that changes on every hit.
