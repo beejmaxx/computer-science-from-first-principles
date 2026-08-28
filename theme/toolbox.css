@@ -1,0 +1,39 @@
+.chapter-subtitle {
+  margin-block-end: 1.5em;
+  color: var(--icons);
+  font-size: 1.08em;
+}
+
+.chapter-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 1.25em;
+  margin-block: 1.5em 2.5em;
+  padding-block: 0.8em;
+  border-block: 1px solid var(--table-border-color);
+  color: var(--icons);
+  font-size: 0.82em;
+}
+
+.chapter-meta span:not(:last-child) {
+  padding-inline-end: 1.25em;
+  border-inline-end: 1px solid var(--table-border-color);
+}
+
+.content main {
+  text-wrap: pretty;
+}
+
+.content main > h2 {
+  margin-block-start: 2.4em;
+}
+
+.content table td:first-child code {
+  white-space: nowrap;
+}
+
+/* mdBook injects every heading from the current page into the book sidebar.
+   These chapters are intentionally long, so keep that sidebar chapter-focused. */
+#mdbook-sidebar ol.section {
+  display: none;
+}
