@@ -68,8 +68,41 @@
 
 .memory-lines {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
   gap: 0.65rem;
+}
+
+.memory-lab-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(13rem, 0.45fr);
+  gap: 0.8rem;
+}
+
+.memory-lab-panel {
+  min-width: 0;
+  padding: 0.7rem;
+  border: 1px solid var(--system-border);
+  border-radius: 9px;
+  background: var(--bg);
+}
+
+.memory-lab-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin-bottom: 0.65rem;
+  color: var(--icons);
+  font-size: 0.74em;
+}
+
+.memory-lab-heading strong {
+  color: var(--fg);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.memory-lines.is-node-layout {
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
 }
 
 .memory-line {
@@ -120,21 +153,42 @@
   font-weight: 700;
 }
 
+.memory-record.is-used {
+  background: color-mix(in srgb, var(--links) 13%, var(--bg));
+}
+
 .memory-record.is-next {
   box-shadow: inset 0 -2px 0 var(--links);
 }
 
+.memory-lines.is-node-layout .memory-records {
+  grid-template-columns: 1fr;
+}
+
+.memory-unused {
+  display: grid;
+  min-height: 30px;
+  place-items: center;
+  border: 1px dashed var(--system-border);
+  border-radius: 5px;
+  color: var(--icons);
+  font-size: 0.66em;
+}
+
 .cache-panel {
-  margin-top: 0.85rem;
+  margin-top: 0;
   color: var(--icons);
   text-align: center;
 }
 
 .cache-contents {
   margin-top: 0.35rem;
+  align-items: stretch;
 }
 
 .cache-slot {
+  display: grid;
+  gap: 0.12rem;
   min-width: 5.2rem;
   padding: 0.3rem 0.55rem;
   border: 1px solid var(--system-border);
@@ -145,8 +199,78 @@
   font-size: 0.8em;
 }
 
+.cache-slot strong {
+  color: var(--fg);
+}
+
+.cache-slot small {
+  font-family: var(--content-font);
+  font-size: 0.72em;
+}
+
 .cache-slot.is-empty {
   color: var(--icons);
+}
+
+.memory-lab-transfer {
+  margin-top: 0.7rem;
+  padding: 0.55rem;
+  border-radius: 6px;
+  background: var(--system-surface);
+  color: var(--fg);
+  font-size: 0.72em;
+  line-height: 1.4;
+}
+
+.latency-ladder {
+  margin: 1.2rem 0 1.6rem;
+  padding: 0.8rem;
+  border: 1px solid var(--table-border-color);
+  border-radius: 10px;
+  background: var(--quote-bg);
+}
+
+.latency-ladder__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+  color: var(--icons);
+  font-size: 0.76em;
+}
+
+.latency-ladder__header strong {
+  color: var(--fg);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.latency-rung {
+  display: grid;
+  grid-template-columns: 11rem minmax(5rem, 1fr) 13rem;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 2.35rem;
+  border-top: 1px dashed color-mix(in srgb, var(--table-border-color) 70%, transparent);
+}
+
+.latency-rung__name {
+  font-weight: 650;
+  font-size: 0.9em;
+}
+
+.latency-rung__bar {
+  width: var(--latency-width);
+  min-width: 0.45rem;
+  height: 0.72rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--links), color-mix(in srgb, var(--links) 42%, #f97316));
+}
+
+.latency-rung__value {
+  color: var(--icons);
+  font-family: var(--mono-font);
+  font-size: 0.72em;
 }
 
 .system-demo-status {
@@ -417,9 +541,32 @@
   font-weight: 700;
 }
 
+@media (max-width: 900px) {
+  .memory-lab-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .latency-rung {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "name value"
+      "bar bar";
+    gap: 0.25rem 0.7rem;
+    padding: 0.45rem 0;
+  }
+
+  .latency-rung__name { grid-area: name; }
+  .latency-rung__bar { grid-area: bar; }
+  .latency-rung__value { grid-area: value; text-align: right; }
+}
+
 @media (max-width: 680px) {
   .memory-lines {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .latency-ladder__header {
+    display: grid;
   }
 
   .vm-translation {
@@ -439,6 +586,14 @@
 
   .memory-lines {
     grid-template-columns: 1fr;
+  }
+
+  .memory-lines.is-node-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .latency-rung__value {
+    font-size: 0.64em;
   }
 
   .system-demo-controls button {

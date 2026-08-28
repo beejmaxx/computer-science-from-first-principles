@@ -1,144 +1,231 @@
 (() => {
-  const patterns = {
-    sequential: Array.from({ length: 24 }, (_, index) => index),
-    strided: Array.from({ length: 24 }, (_, index) => (index * 5) % 24),
-    "pointer-chase": [0, 13, 2, 19, 7, 22, 4, 16, 10, 1, 14, 6, 21, 9, 17, 3, 20, 8, 23, 5, 12, 18, 11, 15],
+  const memoryDescriptions = {
+    sequential: "Sequential scan exposes adjacent addresses and can reuse packed cache lines.",
+    strided: "A stride of five visits every logical record but delays reuse of neighboring bytes.",
+    "pointer-chase": "Each next logical record is discovered from the current node, forming a dependent chain.",
+    "hot-loop": "Four logical records repeat, exposing whether their physical lines fit in the selected cache.",
   };
 
-  const descriptions = {
-    sequential: "Sequential access consumes every record in a loaded line before moving on.",
-    strided: "A stride jumps between lines and often evicts a line before its neighboring records are used.",
-    "pointer-chase": "The next address depends on the current record, limiting look-ahead and prefetching.",
-  };
+  function deterministicPermutation(length, salt = 0) {
+    const values = Array.from({ length }, (_, index) => index);
+    let seed = (0x9e3779b9 ^ length ^ salt) >>> 0;
+    for (let index = length - 1; index > 0; index -= 1) {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      const other = seed % (index + 1);
+      [values[index], values[other]] = [values[other], values[index]];
+    }
+    return values;
+  }
 
   function initializeMemoryHierarchy(root) {
     const patternInput = root.querySelector("[data-memory-pattern]");
+    const layoutInput = root.querySelector("[data-memory-layout]");
+    const workingSetInput = root.querySelector("[data-memory-working-set]");
+    const capacityInput = root.querySelector("[data-memory-capacity]");
     const memory = root.querySelector("[data-memory-lines]");
     const cacheContents = root.querySelector("[data-cache-contents]");
+    const mapElement = root.querySelector("[data-memory-map]");
+    const transferElement = root.querySelector("[data-memory-transfer]");
     const status = root.querySelector("[data-memory-status]");
     const historyElement = root.querySelector("[data-memory-history]");
     const accessesElement = root.querySelector("[data-memory-accesses]");
     const hitsElement = root.querySelector("[data-memory-hits]");
     const missesElement = root.querySelector("[data-memory-misses]");
+    const hitRateElement = root.querySelector("[data-memory-hit-rate]");
+    const utilizationElement = root.querySelector("[data-memory-utilization]");
     const stepButton = root.querySelector('[data-memory-action="step"]');
     const runButton = root.querySelector('[data-memory-action="run"]');
     const resetButton = root.querySelector('[data-memory-action="reset"]');
 
-    let sequence;
-    let cursor;
-    let cache;
-    let hits;
-    let misses;
-    let currentIndex;
-    let history;
+    let sequence = [];
+    let lines = [];
+    let logicalToLine = [];
+    let cursor = 0;
+    let cache = [];
+    let hits = 0;
+    let misses = 0;
+    let fetchedSlots = 0;
+    let usedFetchedSlots = 0;
+    let currentRecord = null;
+    let currentLine = null;
+    let history = [];
     let timer = null;
+    let lastMessage = "";
 
-    const lineOf = (index) => Math.floor(index / 4);
+    function makeSequence(size) {
+      if (patternInput.value === "sequential") {
+        return Array.from({ length: size }, (_, index) => index);
+      }
+      if (patternInput.value === "strided") {
+        return Array.from({ length: size }, (_, index) => (index * 5) % size);
+      }
+      if (patternInput.value === "hot-loop") {
+        return Array.from({ length: size * 2 }, (_, index) => index % 4);
+      }
+      return deterministicPermutation(size, 0x51f15e);
+    }
+
+    function makeLayout(size) {
+      if (layoutInput.value === "packed") {
+        lines = Array.from({ length: Math.ceil(size / 4) }, (_, line) =>
+          Array.from({ length: 4 }, (_, offset) => line * 4 + offset)
+            .filter((record) => record < size));
+        logicalToLine = Array.from({ length: size }, (_, record) => Math.floor(record / 4));
+        mapElement.textContent = "four 16-byte records per 64-byte line";
+        return;
+      }
+
+      const physicalOrder = deterministicPermutation(size, 0xcac4e);
+      lines = physicalOrder.map((record) => [record]);
+      logicalToLine = Array(size);
+      physicalOrder.forEach((record, line) => { logicalToLine[record] = line; });
+      mapElement.textContent = "one 16-byte node per scattered 64-byte line";
+    }
+
+    function cacheEntry(line) {
+      return cache.find((entry) => entry.line === line);
+    }
+
+    function renderMemory(nextRecord) {
+      memory.classList.toggle("is-node-layout", layoutInput.value === "nodes");
+      memory.innerHTML = lines.map((records, line) => {
+        const entry = cacheEntry(line);
+        const classes = ["memory-line"];
+        if (entry) classes.push("is-cached");
+        if (line === currentLine) classes.push("is-current");
+
+        const recordCells = records.map((record) => {
+          const recordClasses = ["memory-record"];
+          if (record === currentRecord) recordClasses.push("is-current");
+          if (record === nextRecord) recordClasses.push("is-next");
+          if (entry && entry.used.has(record)) recordClasses.push("is-used");
+          return `<span class="${recordClasses.join(" ")}">R${record}</span>`;
+        }).join("");
+        const unused = layoutInput.value === "nodes"
+          ? '<span class="memory-unused">48 B unused</span>'
+          : "";
+        return `<div class="${classes.join(" ")}"><div class="memory-line-label">line ${line} · 64 B</div><div class="memory-records">${recordCells}${unused}</div></div>`;
+      }).join("");
+    }
 
     function render(message) {
-      const nextIndex = cursor < sequence.length ? sequence[cursor] : null;
-      const currentLine = currentIndex === null ? null : lineOf(currentIndex);
+      const nextRecord = cursor < sequence.length ? sequence[cursor] : null;
+      renderMemory(nextRecord);
 
-      memory.innerHTML = Array.from({ length: 6 }, (_, line) => {
-        const lineClasses = ["memory-line"];
-        if (cache.includes(line)) lineClasses.push("is-cached");
-        if (line === currentLine) lineClasses.push("is-current");
-
-        const records = Array.from({ length: 4 }, (_, offset) => {
-          const index = line * 4 + offset;
-          const recordClasses = ["memory-record"];
-          if (index === currentIndex) recordClasses.push("is-current");
-          if (index === nextIndex) recordClasses.push("is-next");
-          return `<span class="${recordClasses.join(" ")}">${index}</span>`;
-        }).join("");
-
-        return `<div class="${lineClasses.join(" ")}"><div class="memory-line-label">line ${line} · 64 B</div><div class="memory-records">${records}</div></div>`;
+      const capacity = Number(capacityInput.value);
+      cacheContents.innerHTML = Array.from({ length: capacity }, (_, slot) => {
+        const entry = cache[slot];
+        return entry
+          ? `<span class="cache-slot"><strong>line ${entry.line}</strong><small>${entry.used.size}/4 useful slots</small></span>`
+          : '<span class="cache-slot is-empty"><strong>empty</strong><small>available</small></span>';
       }).join("");
 
-      cacheContents.innerHTML = Array.from({ length: 3 }, (_, slot) => {
-        const line = cache[slot];
-        return line === undefined
-          ? '<span class="cache-slot is-empty">empty</span>'
-          : `<span class="cache-slot">line ${line}</span>`;
-      }).join("");
-
-      accessesElement.textContent = String(cursor);
+      const accesses = hits + misses;
+      const hitRate = accesses === 0 ? null : Math.round((hits / accesses) * 100);
+      const utilization = fetchedSlots === 0 ? null : Math.round((usedFetchedSlots / fetchedSlots) * 100);
+      accessesElement.textContent = String(accesses);
       hitsElement.textContent = String(hits);
       missesElement.textContent = String(misses);
+      hitRateElement.textContent = hitRate === null ? "—" : `${hitRate}%`;
+      utilizationElement.textContent = utilization === null ? "—" : `${utilization}%`;
       historyElement.textContent = history.length
-        ? `recent records: ${history.slice(-10).join(" → ")}`
-        : "recent records: —";
-      status.textContent = message || descriptions[patternInput.value];
+        ? `recent accesses: ${history.slice(-10).map(({ record, line }) => `R${record}@L${line}`).join(" → ")}`
+        : "recent accesses: —";
 
+      lastMessage = message || memoryDescriptions[patternInput.value];
+      status.textContent = lastMessage;
       const done = cursor >= sequence.length;
       stepButton.disabled = done || timer !== null;
-      runButton.disabled = done || timer !== null;
-      patternInput.disabled = timer !== null;
-      memory.setAttribute("aria-label", `Six conceptual memory lines. Cache currently contains ${cache.length ? cache.map((line) => `line ${line}`).join(", ") : "no lines"}.`);
+      runButton.disabled = done && timer === null;
+      runButton.textContent = timer === null ? "Run" : "Pause";
+      runButton.setAttribute("aria-pressed", timer === null ? "false" : "true");
+      [patternInput, layoutInput, workingSetInput, capacityInput].forEach((input) => {
+        input.disabled = timer !== null;
+      });
+      memory.setAttribute("aria-label", `${lines.length} conceptual memory lines. Cache contains ${cache.length ? cache.map((entry) => `line ${entry.line}`).join(", ") : "no lines"}.`);
     }
 
     function accessNext() {
       if (cursor >= sequence.length) return false;
-      currentIndex = sequence[cursor];
-      const line = lineOf(currentIndex);
-      const cachedAt = cache.indexOf(line);
+      currentRecord = sequence[cursor];
+      currentLine = logicalToLine[currentRecord];
+      const foundAt = cache.findIndex((entry) => entry.line === currentLine);
       let message;
 
-      if (cachedAt >= 0) {
+      if (foundAt >= 0) {
         hits += 1;
-        cache.splice(cachedAt, 1);
-        cache.push(line);
-        message = `Record ${currentIndex} is in cached line ${line}: hit.`;
+        const entry = cache.splice(foundAt, 1)[0];
+        if (!entry.used.has(currentRecord)) {
+          entry.used.add(currentRecord);
+          usedFetchedSlots += 1;
+        }
+        cache.push(entry);
+        transferElement.textContent = `Hit: line ${currentLine} was already resident; no new line transfer.`;
+        message = `R${currentRecord} maps to physical line ${currentLine}: cache hit.`;
       } else {
         misses += 1;
-        const evicted = cache.length === 3 ? cache.shift() : null;
-        cache.push(line);
-        message = evicted === null
-          ? `Record ${currentIndex} loads line ${line}: miss.`
-          : `Record ${currentIndex} loads line ${line}: miss, evicting line ${evicted}.`;
+        fetchedSlots += 4;
+        usedFetchedSlots += 1;
+        const evicted = cache.length === Number(capacityInput.value) ? cache.shift() : null;
+        cache.push({ line: currentLine, used: new Set([currentRecord]) });
+        transferElement.textContent = evicted
+          ? `Miss: fetched 64-byte line ${currentLine}; evicted line ${evicted.line}.`
+          : `Miss: fetched all 64 bytes of line ${currentLine}.`;
+        message = evicted
+          ? `R${currentRecord} maps to line ${currentLine}: miss, replacing least-recently-used line ${evicted.line}.`
+          : `R${currentRecord} maps to line ${currentLine}: compulsory miss.`;
       }
 
+      history.push({ record: currentRecord, line: currentLine });
       cursor += 1;
-      history.push(currentIndex);
       if (cursor === sequence.length) {
-        message += ` Finished with ${hits} hits and ${misses} misses in this simplified cache.`;
+        message += ` Complete: ${hits} hits, ${misses} misses.`;
       }
       render(message);
       return cursor < sequence.length;
     }
 
-    function stopRun() {
-      const message = status.textContent;
+    function stopRun(message) {
       if (timer !== null) {
         clearInterval(timer);
         timer = null;
       }
-      render(message);
+      render(message || lastMessage);
     }
 
     function reset() {
-      if (timer !== null) clearInterval(timer);
-      timer = null;
-      sequence = patterns[patternInput.value];
+      stopRun();
+      const size = Number(workingSetInput.value);
+      makeLayout(size);
+      sequence = makeSequence(size);
       cursor = 0;
       cache = [];
       hits = 0;
       misses = 0;
-      currentIndex = null;
+      fetchedSlots = 0;
+      usedFetchedSlots = 0;
+      currentRecord = null;
+      currentLine = null;
       history = [];
+      transferElement.textContent = "No line transferred yet.";
       render();
     }
 
     stepButton.addEventListener("click", accessNext);
     runButton.addEventListener("click", () => {
-      if (timer !== null || cursor >= sequence.length) return;
+      if (timer !== null) {
+        stopRun("Paused. Cache contents and progress are preserved.");
+        return;
+      }
+      if (cursor >= sequence.length) return;
       timer = setInterval(() => {
         if (!accessNext()) stopRun();
-      }, 240);
-      render("Running the selected access pattern…");
+      }, 260);
+      render("Running the selected physical access experiment…");
     });
     resetButton.addEventListener("click", reset);
-    patternInput.addEventListener("change", reset);
+    [patternInput, layoutInput, workingSetInput, capacityInput]
+      .forEach((input) => input.addEventListener("change", reset));
     reset();
   }
 
